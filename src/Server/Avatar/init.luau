@@ -1,3 +1,4 @@
+local InsertService = game:GetService("InsertService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local Avalog = script.Parent.Parent.Parent
@@ -16,7 +17,11 @@ local CONFIG = Config:Get()
 local RATE_LIMITS = {
 	Update = RateLimit(3, 1),
 	BulkPurchaseItems = RateLimit(1, 2),
+	EmoteAnimation = RateLimit(10, 5),
 }
+
+-- Emote asset id -> animation id ("" when the asset has none), shared by every player
+local EmoteAnimations: { [number]: string } = {}
 
 local Avatar = {
 	Avatars = {},
@@ -108,6 +113,28 @@ function Avatar:Apply(Player: Player, HumanoidDescription: HumanoidDescription)
 	return false
 end
 
+-- The animation inside an emote catalog asset. Clients can't load assets, so the
+-- editor asks for this to preview an emote on its avatar.
+function Avatar:GetEmoteAnimation(AssetId: number): string
+	local Cached = EmoteAnimations[AssetId]
+	if Cached ~= nil then
+		return Cached
+	end
+
+	local AnimationId = ""
+	local Ok, Model = pcall(InsertService.LoadAsset, InsertService, AssetId)
+	if Ok and Model then
+		local Animation = if Model:IsA("Animation") then Model else Model:FindFirstChildWhichIsA("Animation", true)
+		if Animation and #Animation.AnimationId <= 200 then
+			AnimationId = Animation.AnimationId
+		end
+		Model:Destroy()
+		EmoteAnimations[AssetId] = AnimationId
+	end
+
+	return AnimationId
+end
+
 function Avatar:GetCharacterObjects(Player: Player): (Model?, Humanoid?, HumanoidDescription?)
 	local Character = Player.Character
 
@@ -128,6 +155,15 @@ function Avatar:Start()
 
 			return Avatar:BulkPurchaseItems(Player, SafeItems)
 		end
+	end)
+
+	Zap.GetEmoteAnimation.SetCallback(function(Player, AssetId)
+		-- Zap never answers if this errors, so always return a string
+		if not RATE_LIMITS.EmoteAnimation(Player.UserId) then
+			return ""
+		end
+		local Ok, AnimationId = pcall(Avatar.GetEmoteAnimation, Avatar, AssetId)
+		return if Ok then AnimationId else ""
 	end)
 
 	Zap.UpdateAvatar.SetCallback(function(Player, Data): ()

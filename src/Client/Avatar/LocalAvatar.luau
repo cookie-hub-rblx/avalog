@@ -201,11 +201,67 @@ function LocalAvatar:ToggleCatalogItem(CatalogItem: CatalogItem)
 		local Equipped = LocalAvatar.HumanoidDescriber:IsAssetEquipped(CatalogItem.Id, CatalogItem.AssetType)
 
 		LocalAvatar.HumanoidDescriber:SetAssetEquipped(CatalogItem.Id, CatalogItem.AssetType, not Equipped)
+
+		if CatalogItem.AssetType == Enum.AvatarAssetType.EmoteAnimation then
+			if Equipped then
+				LocalAvatar:StopEmotePreview()
+			else
+				task.spawn(LocalAvatar.PreviewEmote, LocalAvatar, CatalogItem.Id)
+			end
+		end
 	end
 
 	self:ApplyLimits()
 
 	self:Apply()
+end
+
+-- Emote preview: tapping an emote in the editor plays it on the avatar there.
+-- PlayEmote only works on the real character, so the server looks up the emote's
+-- animation and the preview avatar's Animator plays it.
+local EmoteAnimationIds: { [number]: string } = {}
+local EmoteTrack: AnimationTrack? = nil
+local EmoteRequest = 0
+
+function LocalAvatar:StopEmotePreview()
+	EmoteRequest += 1
+	if EmoteTrack then
+		EmoteTrack:Stop(0.2)
+		EmoteTrack:Destroy()
+		EmoteTrack = nil
+	end
+end
+
+function LocalAvatar:PreviewEmote(AssetId: number)
+	LocalAvatar:StopEmotePreview()
+	local Request = EmoteRequest
+	-- Let the editor apply the new description first
+	task.wait()
+
+	local AnimationId = EmoteAnimationIds[AssetId]
+	if AnimationId == nil then
+		if Zap == nil then
+			return
+		end
+		local Ok, Result = pcall(Zap.GetEmoteAnimation.Call, AssetId)
+		AnimationId = if Ok and type(Result) == "string" then Result else ""
+		EmoteAnimationIds[AssetId] = AnimationId
+	end
+
+	local Humanoid = LocalAvatar.Humanoid
+	local Animator = Humanoid and Humanoid:FindFirstChildOfClass("Animator")
+	if AnimationId == "" or Animator == nil or Request ~= EmoteRequest then
+		return
+	end
+
+	local Animation = Instance.new("Animation")
+	Animation.AnimationId = AnimationId
+	local Ok, Track = pcall(Animator.LoadAnimation, Animator, Animation)
+	if Ok and Request == EmoteRequest then
+		Track.Priority = Enum.AnimationPriority.Action
+		Track:Play(0.2)
+		EmoteTrack = Track
+	end
 end
 
 function LocalAvatar:Reset()

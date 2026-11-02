@@ -232,3 +232,10 @@ event AvatarShared = {
 	call: SingleAsync,
 	data: (DisplayName: string.binary(0..100)),
 }
+
+-- The animation behind an emote catalog asset, so the editor can preview it ("" if unknown)
+funct GetEmoteAnimation = {
+	call: Async,
+	args: (AssetId: f64),
+	rets: string.binary(0..200),
+}

@@ -18,6 +18,8 @@
 > - **Shared** tab: share the avatar you're wearing with a caption; everyone, in every server, sees the
 >   newest 60 shared avatars with 3D previews and can try them on. Shares live in a MemoryStore sorted
 >   map for 7 days (one per player); captions use the broadcast text filter.
+> - Tapping an emote plays it on the avatar preview (the server looks up the emote's animation with
+>   `InsertService:LoadAsset`, cached per emote), so you can see it before equipping or buying.
 > - API: `Avalog:OpenMode(Mode)`, `Avalog:IsOpen()`, `Avalog:OnOpenChanged(Callback)` and the
 >   `Avalog.AvatarShared` signal, so games can use their own open buttons. EasyLoader skips the top bar
 >   icon when its config sets `TopbarIcon = false`.
