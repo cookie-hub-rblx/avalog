@@ -326,7 +326,12 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 						Name = "Actions",
 						AnchorPoint = Vector2.new(0.5, 1),
 						Position = UDim2.fromScale(0.5, 1),
-						Size = UDim2.fromScale(1, 0),
+						-- A fixed height: sizing the row from buttons that stretch to the row's own
+						-- height could settle on a squashed bar with the label spilling out.
+						Size = Scope:Computed(function(Use)
+							return UDim2.new(1, 0, 0, Use(Theme.TextSize["1"]) + Use(Theme.Spacing["0.25"]) * 2.5)
+						end),
+						AutomaticSize = Enum.AutomaticSize.None,
 						Scale = Scope:Spring(
 							Scope:Computed(function(Use)
 								if Use(Equipped) and Use(RowReady) then

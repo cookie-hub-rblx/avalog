@@ -11,6 +11,8 @@ local OnChange = Fusion.OnChange
 
 -- Time per frame spent building new item buttons (at least one is built per frame)
 local BUILD_BUDGET_SECONDS = 0.004
+-- Most cards in one row on wide screens
+local MAX_COLUMNS = 8
 
 export type Props = { [string]: any } & {
 	Shown: Fusion.UsedAs<boolean>?,
@@ -30,6 +32,21 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 
 	local AbsoluteCanvasSize = Scope:Value(Vector2.new())
 	local AbsoluteWindowSize = Scope:Value(Vector2.new())
+
+	-- The grid works out how many cards fit in a row and gives every card the same width.
+	-- (A wrapping list set to "fill" stretched a lone card on the last row across the whole row.)
+	local GridWidth = Scope:Value(Vector2.new())
+	local Gap = Scope:Computed(function(Use)
+		return Use(Theme.Spacing["1"])
+	end)
+	local CardSize = Scope:Computed(function(Use)
+		local WidthValue = Use(GridWidth).X
+		local GapValue = Use(Gap)
+		local MinWidth = Use(Theme.Spacing["8"])
+		local Columns = math.clamp(math.floor((WidthValue + GapValue) / (MinWidth + GapValue)), 1, MAX_COLUMNS)
+		-- Whole pixels, rounded down, so rounding never pushes the last card onto the next row
+		return UDim2.fromOffset(math.floor((WidthValue - GapValue * (Columns - 1)) / Columns), 0)
+	end)
 
 	local LastUpdated = 0
 
@@ -100,12 +117,15 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		[Out "AbsoluteWindowSize"] = AbsoluteWindowSize,
 
 		[Children] = {
-			Scope:Frame {
+			Scope:Hydrate(Scope:Frame {
 				Name = "Items",
 				ListEnabled = true,
 				ListFillDirection = Enum.FillDirection.Horizontal,
-				ListHorizontalFlex = Enum.UIFlexAlignment.Fill,
 				ListWraps = true,
+				ListPadding = Scope:Computed(function(Use)
+					return UDim.new(0, Use(Gap))
+				end),
+				Size = UDim2.fromScale(1, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
 
 				[Children] = {
@@ -139,15 +159,14 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 									return ItemValue ~= nil and ItemValue.Visible ~= false
 								end),
 								LayoutOrder = Index,
-								Size = UDim2.fromScale(1 / 8, 0),
+								Size = CardSize,
 								AutomaticSize = Enum.AutomaticSize.Y,
-								MinSize = Scope:Computed(function(Use)
-									return Vector2.new(Use(Theme.Spacing["8"]), 0)
-								end),
 							}
 						end)
 					end),
 				},
+			}) {
+				[Out "AbsoluteSize"] = GridWidth,
 			},
 			Scope:Card {
 				Name = "NoItemsCard",
