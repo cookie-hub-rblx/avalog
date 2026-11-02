@@ -6,8 +6,11 @@ Avalog.Config:Update(Config)
 
 Avalog:Start()
 
-local AvalogIcon = Icon.new():setImage("rbxassetid://93133319477541"):setLeft():setImageScale(0.6)
+-- Games with their own open buttons set TopbarIcon = false in EasyLoader.Config.
+if Config.TopbarIcon ~= false then
+	local AvalogIcon = Icon.new():setImage("rbxassetid://93133319477541"):setLeft():setImageScale(0.6)
 
-AvalogIcon.toggled:Connect(function()
-	Avalog:ToggleOpen()
-end)
+	AvalogIcon.toggled:Connect(function()
+		Avalog:ToggleOpen()
+	end)
+end

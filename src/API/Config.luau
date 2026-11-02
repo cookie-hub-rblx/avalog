@@ -6,7 +6,7 @@ export type Item = {
 	ItemType: Enum.AvatarItemType,
 }
 export type CoreGuiItem = "Chat" | "PlayerList" | "Backpack" | "Captures" | "Emotes" | "TouchControls"
-export type EditMode = "Marketplace" | "Inventory" | "Customize" | "Outfits"
+export type EditMode = "Marketplace" | "Inventory" | "Customize" | "Outfits" | "Shared"
 export type Config = {
 	Theme: any?,
 	DataStoreEnabled: boolean?,
@@ -19,6 +19,8 @@ export type Config = {
 		Accessories: number?,
 	}?,
 	EditModes: { EditMode }?,
+	-- EasyLoader only: false hides the top bar button (for games with their own open buttons)
+	TopbarIcon: boolean?,
 }
 
 local CONFIG_TEMPLATE: Config = {
@@ -32,7 +34,7 @@ local CONFIG_TEMPLATE: Config = {
 		Accessories = 10,
 	},
 	HiddenCoreGui = { "PlayerList", "Captures", "Emotes", "TouchControls" },
-	EditModes = { "Marketplace", "Inventory", "Customize", "Outfits" },
+	EditModes = { "Marketplace", "Inventory", "Customize", "Outfits", "Shared" },
 }
 
 --[=[
@@ -49,6 +51,7 @@ local CONFIG_TEMPLATE: Config = {
 	@field HiddenCoreGui { CoreGuiItem }?
 	@field Limits { Accessories: number? }?
 	@field EditModes { EditMode }?
+	@field TopbarIcon boolean?
 ]=]
 --[=[
 	@type CoreGuiItem string

@@ -14,6 +14,7 @@ local EquippedItemsTab = require(script.Parent.EquippedItemsTab)
 local InventoryItemsTab = require(script.Parent.InventoryItemsTab)
 local PrimaryItemsTab = require(script.Parent.PrimaryItemsTab)
 local OutfitsTab = require(script.Parent.OutfitsTab)
+local SharedAvatarsTab = require(script.Parent.SharedAvatarsTab)
 
 local TAB_COMPONENTS = {
 	CatalogItemsTab = CatalogItemsTab,
@@ -23,6 +24,7 @@ local TAB_COMPONENTS = {
 	InventoryItemsTab = InventoryItemsTab,
 	PrimaryItemsTab = PrimaryItemsTab,
 	OutfitsTab = OutfitsTab,
+	SharedAvatarsTab = SharedAvatarsTab,
 }
 
 export type Props = { [string]: any } & {}
@@ -36,6 +38,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		InventoryItemsTab = InventoryItemsTab,
 		PrimaryItemsTab = PrimaryItemsTab,
 		OutfitsTab = OutfitsTab,
+		SharedAvatarsTab = SharedAvatarsTab,
 	})
 	local Theme = OnyxUI.Themer.Theme:now()
 	local Modes = Config:Get().EditModes
@@ -62,6 +65,8 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 			return "InventoryItemsTab"
 		elseif ActiveModeValue == "Outfits" then
 			return "OutfitsTab"
+		elseif ActiveModeValue == "Shared" then
+			return "SharedAvatarsTab"
 		elseif ActiveModeValue == "Customize" then
 			if CategoryValue and CategoryValue.Name then
 				if CategoryValue.Name == "Skin" then

@@ -25,8 +25,8 @@ local function TruncateUtf8(Text: string, MaxBytes: number): string
 end
 
 -- Trims, collapses whitespace, drops control characters and invalid UTF-8,
--- then shortens the name to the byte limit. Returns "" when nothing is left.
-function Outfits.CleanName(Name: string?): string
+-- then shortens the text to MaxBytes. Returns "" when nothing is left.
+function Outfits.CleanText(Name: string?, MaxBytes: number): string
 	if type(Name) ~= "string" then
 		return ""
 	end
@@ -39,7 +39,12 @@ function Outfits.CleanName(Name: string?): string
 	Name = string.gsub(Name, "%s+", " ")
 	Name = string.match(Name, "^%s*(.-)%s*$") or ""
 
-	return TruncateUtf8(Name, Outfits.MAX_NAME_BYTES)
+	return TruncateUtf8(Name, MaxBytes)
+end
+
+-- CleanText for outfit names.
+function Outfits.CleanName(Name: string?): string
+	return Outfits.CleanText(Name, Outfits.MAX_NAME_BYTES)
 end
 
 return Outfits

@@ -11,6 +11,16 @@
 > - The avatar preview and the clock stop updating while the menu is closed.
 >
 > Measured in a Studio playtest: Body click 67 ms → 24 ms blocked, worst frame after switching 133–290 ms → about 30 ms.
+>
+> Also added in this fork:
+>
+> - **Outfits** tab: save, rename, delete and wear named looks (kept in the player's Avalog data).
+> - **Shared** tab: share the avatar you're wearing with a caption; everyone, in every server, sees the
+>   newest 60 shared avatars with 3D previews and can try them on. Shares live in a MemoryStore sorted
+>   map for 7 days (one per player); captions use the broadcast text filter.
+> - API: `Avalog:OpenMode(Mode)`, `Avalog:IsOpen()`, `Avalog:OnOpenChanged(Callback)` and the
+>   `Avalog.AvatarShared` signal, so games can use their own open buttons. EasyLoader skips the top bar
+>   icon when its config sets `TopbarIcon = false`.
 
 <p align="center">
   <a href="https://loneka.com/avalog">

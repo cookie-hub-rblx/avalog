@@ -35,6 +35,14 @@ local States = {
 		Busy = Scope:Value(false),
 		Message = Scope:Value(nil) :: Fusion.Value<{ Text: string, Ok: boolean }?>,
 	},
+	SharedAvatars = {
+		List = Scope:Value({}) :: Fusion.Value<{ any }>,
+		Loaded = Scope:Value(false),
+		Busy = Scope:Value(false),
+		-- Whether the local player has an avatar shared right now
+		Mine = Scope:Value(false),
+		Message = Scope:Value(nil) :: Fusion.Value<{ Text: string, Ok: boolean }?>,
+	},
 	Checkout = {
 		Loading = Scope:Value(false),
 	},

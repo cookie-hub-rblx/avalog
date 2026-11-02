@@ -132,6 +132,7 @@ local Categories: { [string]: { Category } } = {
 	Inventory = {},
 	Customize = { { Name = "Equipped" }, { Name = "Skin" }, { Name = "Build" } },
 	Outfits = { { Name = "Outfits" } },
+	Shared = { { Name = "Shared" } },
 }
 
 Categories.Inventory = PurgeBundles(Categories.Marketplace)

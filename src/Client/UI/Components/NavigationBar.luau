@@ -15,6 +15,7 @@ local EDIT_MODES = {
 	Inventory = { Label = "Inventory", Icon = "rbxassetid://13846287045" },
 	Customize = { Label = "Customize", Icon = "rbxassetid://13845862177" },
 	Outfits = { Label = "Outfits", Icon = "rbxassetid://108720789877383" },
+	Shared = { Label = "Shared", Icon = nil },
 }
 
 -- Modes where the search box does something
@@ -22,6 +23,7 @@ local SEARCHABLE = {
 	Marketplace = "Search the shop",
 	Inventory = "Search your items",
 	Outfits = "Search your outfits",
+	Shared = "Search shared avatars",
 }
 
 local SEARCH_DELAY = 0.4

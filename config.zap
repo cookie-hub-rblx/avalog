@@ -192,3 +192,43 @@ funct DeleteOutfit = {
 	args: (Index: u8),
 	rets: OutfitsResult,
 }
+
+type SharedAvatar = struct {
+	UserId: f64,
+	DisplayName: string.binary(0..100),
+	Caption: string.binary(0..60),
+	SharedAt: f64,
+	Data: HumanoidDescriberData,
+}
+
+type SharedAvatarsResult = struct {
+	Ok: boolean,
+	Message: string.binary(0..120)?,
+	Avatars: SharedAvatar[0..60],
+	Mine: boolean,
+}
+
+funct GetSharedAvatars = {
+	call: Async,
+	args: (),
+	rets: SharedAvatarsResult,
+}
+
+funct ShareAvatar = {
+	call: Async,
+	args: (Caption: string.binary(0..60), Data: HumanoidDescriberData),
+	rets: SharedAvatarsResult,
+}
+
+funct UnshareAvatar = {
+	call: Async,
+	args: (),
+	rets: SharedAvatarsResult,
+}
+
+event AvatarShared = {
+	from: Server,
+	type: Reliable,
+	call: SingleAsync,
+	data: (DisplayName: string.binary(0..100)),
+}
