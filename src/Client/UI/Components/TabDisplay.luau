@@ -52,11 +52,9 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		local CategoryValue = Use(ActiveCategory)
 
 		if ActiveModeValue == "Marketplace" then
-			if CategoryValue.Name == "Featured" then
-				return "PrimaryItemsTab"
-			else
-				return "CatalogItemsTab"
-			end
+			-- Featured and the other categories share one tab (see IsFeatured below),
+			-- so its item buttons are reused instead of rebuilt when switching.
+			return "PrimaryItemsTab"
 		elseif ActiveModeValue == "Inventory" then
 			return "InventoryItemsTab"
 		elseif ActiveModeValue == "Customize" then
@@ -72,6 +70,11 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		end
 
 		return nil
+	end)
+
+	local IsFeatured = Scope:Computed(function(Use)
+		local CategoryValue = Use(ActiveCategory)
+		return CategoryValue ~= nil and CategoryValue.Name == "Featured"
 	end)
 
 	return Scope:Frame(OnyxUI.Util.CombineProps(Props, {
@@ -94,6 +97,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 					return OnyxUI.Themer.Theme:is(Theme):during(function()
 						return TabComponent(Scope, {
 							Shown = true,
+							Primary = IsFeatured,
 						})
 					end)
 				end

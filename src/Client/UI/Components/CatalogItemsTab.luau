@@ -53,7 +53,23 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 	local Search = Scope:Value(nil)
 	local Results = Scope:Value({})
 
+	local Alive = true
+	local UpdatedConnection = nil
+	local SearchScheduled = false
+	table.insert(Scope, function()
+		Alive = false
+		if UpdatedConnection ~= nil then
+			UpdatedConnection:Disconnect()
+			UpdatedConnection = nil
+		end
+	end)
+
 	local function UpdateSearch()
+		SearchScheduled = false
+
+		if not Alive then
+			return
+		end
 		if not Fusion.peek(Shown) then
 			return
 		end
@@ -72,25 +88,43 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 			BundleTypes = BundleTypesValue,
 			AssetTypes = AssetTypesValue,
 			SearchKeyword = SearchQueryValue,
-			CategoryFilter = (Searching and DeepestCategoryValue.CategoryFilter) or nil,
+			CategoryFilter = (Searching and DeepestCategoryValue and DeepestCategoryValue.CategoryFilter) or nil,
 		})
 
-		SearchObject.Updated:Connect(function()
-			Results:set(SearchObject.Results)
+		if SearchObject == Fusion.peek(Search) then
+			return
+		end
+
+		-- Only the current search may update the results; an older one finishing late is ignored
+		if UpdatedConnection ~= nil then
+			UpdatedConnection:Disconnect()
+		end
+		UpdatedConnection = SearchObject.Updated:Connect(function()
+			if Alive and Fusion.peek(Search) == SearchObject then
+				Results:set(SearchObject.Results)
+			end
 		end)
 
 		Search:set(SearchObject)
 		Results:set(SearchObject.Results)
 	end
-	Scope:Observer(BundleTypes):onChange(function()
-		UpdateSearch()
-	end)
-	Scope:Observer(AssetTypes):onChange(function()
-		UpdateSearch()
-	end)
-	Scope:Observer(States.Catalog.SearchQuery):onChange(function()
-		UpdateSearch()
-	end)
+
+	-- A category click changes the category, its sub-category, asset and bundle types
+	-- one after another. Wait for the last one and search once.
+	local function ScheduleSearch()
+		if SearchScheduled then
+			return
+		end
+		SearchScheduled = true
+		task.defer(UpdateSearch)
+	end
+	Scope:Observer(BundleTypes):onChange(ScheduleSearch)
+	Scope:Observer(AssetTypes):onChange(ScheduleSearch)
+	Scope:Observer(States.Catalog.SearchQuery):onChange(ScheduleSearch)
+	Scope:Observer(DeepestCategory):onChange(ScheduleSearch)
+	if typeof(LoadItems) == "table" then
+		Scope:Observer(LoadItems):onChange(ScheduleSearch)
+	end
 	UpdateSearch()
 
 	local CombinedItems = Scope:Computed(function(Use)

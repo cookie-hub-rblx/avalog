@@ -21,6 +21,17 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		Selection:set(1)
 	end)
 
+	-- Grows to the most options seen; unused buttons are hidden
+	local MostOptions = 0
+	local Slots = Scope:Computed(function(Use)
+		MostOptions = math.max(MostOptions, #Use(Options))
+		local SlotList = table.create(MostOptions)
+		for Index = 1, MostOptions do
+			SlotList[Index] = Index
+		end
+		return SlotList
+	end)
+
 	local Tabs = Scope:Scroller(OnyxUI.Util.CombineProps(Props, {
 		Name = script.Name,
 		ListEnabled = true,
@@ -36,17 +47,29 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		ScrollBarImageTransparency = 1,
 
 		[Children] = {
-			Scope:ForValues(Options, function(Use, Scope, Option)
-				local OptionsValue = Use(Options)
+			-- Buttons are kept by position and relabelled when the options change
+			-- (e.g. Body -> Clothing sub-categories), instead of being rebuilt.
+			Scope:ForValues(Slots, function(Use, Scope, Index)
+				local LastOption = Fusion.peek(Options)[Index] or ""
+				local Option = Scope:Computed(function(Use)
+					local OptionValue = Use(Options)[Index]
+					if OptionValue ~= nil then
+						LastOption = OptionValue
+					end
+					return LastOption
+				end)
 
 				return OnyxUI.Themer.Theme:is(Fusion.peek(States.Theme)):during(function()
 					return Scope:Button {
 						Name = "OptionButton",
 						Content = Scope:Computed(function(Use)
-							return { Option }
+							return { Use(Option) }
+						end),
+						Visible = Scope:Computed(function(Use)
+							return Use(Options)[Index] ~= nil
 						end),
 						Style = Scope:Computed(function(Use)
-							if Use(Options)[Use(Selection)] == Option then
+							if Use(Selection) == Index then
 								return "Filled"
 							else
 								return "Ghost"
@@ -54,12 +77,10 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 						end),
 						Color = Theme.Colors.BaseContent.Main,
 						SizeVariant = "Medium",
-						LayoutOrder = Scope:Computed(function()
-							return table.find(OptionsValue, Option) or 0
-						end),
+						LayoutOrder = Index,
 
 						OnActivated = function()
-							Selection:set(table.find(OptionsValue, Option))
+							Selection:set(Index)
 						end,
 					}
 				end)

@@ -12,16 +12,22 @@ function Inventory.Search(AssetTypes: { Enum.AvatarAssetType })
 		Results = {},
 		Pages = nil,
 		Updated = Signal.new(),
+		_LoadingPage = false,
 	}
 
 	function Search:LoadNextPage()
-		return Future.Try(function()
-			assert(self.Pages ~= nil, "Pages does not exist.")
-			assert(not self.Pages.IsFinished, "Pages is finished.")
+		-- One page request at a time; scrolling fires this repeatedly
+		if self._LoadingPage or self.Pages == nil or self.Pages.IsFinished then
+			return nil
+		end
+		self._LoadingPage = true
 
+		return Future.Try(function()
 			self.Pages:AdvanceToNextPageAsync()
 			return self.Pages:GetCurrentPage()
 		end):After(function(Success, Result)
+			self._LoadingPage = false
+
 			if Success and Result then
 				self:_LoadPage(Result)
 			end

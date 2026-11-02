@@ -44,7 +44,23 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 	local Search = Scope:Value(nil)
 	local Results = Scope:Value({})
 
+	local Alive = true
+	local UpdatedConnection = nil
+	local SearchScheduled = false
+	table.insert(Scope, function()
+		Alive = false
+		if UpdatedConnection ~= nil then
+			UpdatedConnection:Disconnect()
+			UpdatedConnection = nil
+		end
+	end)
+
 	local function UpdateSearch()
+		SearchScheduled = false
+
+		if not Alive then
+			return
+		end
 		if not Fusion.peek(Shown) then
 			return
 		end
@@ -56,19 +72,30 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 
 		local SearchObject = Inventory.Search(AssetTypesValue)
 
-		SearchObject.Updated:Connect(function()
-			Results:set(SearchObject.Results)
+		-- Only the current search may update the results
+		if UpdatedConnection ~= nil then
+			UpdatedConnection:Disconnect()
+		end
+		UpdatedConnection = SearchObject.Updated:Connect(function()
+			if Alive and Fusion.peek(Search) == SearchObject then
+				Results:set(SearchObject.Results)
+			end
 		end)
 
 		Search:set(SearchObject)
 		Results:set(SearchObject.Results)
 	end
-	Scope:Observer(AssetTypes):onChange(function()
-		UpdateSearch()
-	end)
-	Scope:Observer(States.Inventory.AccessAllowed):onChange(function()
-		UpdateSearch()
-	end)
+
+	-- Category and sub-category change one after another on a click; search once
+	local function ScheduleSearch()
+		if SearchScheduled then
+			return
+		end
+		SearchScheduled = true
+		task.defer(UpdateSearch)
+	end
+	Scope:Observer(AssetTypes):onChange(ScheduleSearch)
+	Scope:Observer(States.Inventory.AccessAllowed):onChange(ScheduleSearch)
 	UpdateSearch()
 
 	local ShownResults = Scope:ForValues(Results, function(Use, Scope, Result)
@@ -84,13 +111,16 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		end
 	end)
 
-	AvatarEditorService.PromptAllowInventoryReadAccessCompleted:Connect(function(Result)
-		local ShownValue = Fusion.peek(Shown)
+	table.insert(
+		Scope,
+		AvatarEditorService.PromptAllowInventoryReadAccessCompleted:Connect(function(Result)
+			local ShownValue = Fusion.peek(Shown)
 
-		if ShownValue and (Result ~= Enum.AvatarPromptResult.Success) then
-			States.Catalog.Mode:set(1)
-		end
-	end)
+			if ShownValue and (Result ~= Enum.AvatarPromptResult.Success) then
+				States.Catalog.Mode:set(1)
+			end
+		end)
+	)
 
 	return Scope:ItemsTab(OnyxUI.Util.CombineProps(Props, {
 		Name = script.Name,

@@ -46,16 +46,24 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		LastDragPosition = Position
 	end)
 
-	RunService.RenderStepped:Connect(function(DeltaTime)
-		if not Dragging then
-			RotationAngle += DeltaTime * math.rad(30)
-		end
+	table.insert(
+		Scope,
+		RunService.RenderStepped:Connect(function(DeltaTime)
+			-- The menu stays built while closed; don't re-render the viewport then
+			if not Fusion.peek(States.Open) or Fusion.peek(States.ItemDetails.Open) then
+				return
+			end
 
-		ViewportCamera.CFrame = CFrame.lookAt(
-			Vector3.new(8 * math.cos(RotationAngle), 0, 8 * math.sin(RotationAngle)),
-			Vector3.new(0, 0, 0)
-		)
-	end)
+			if not Dragging then
+				RotationAngle += DeltaTime * math.rad(30)
+			end
+
+			ViewportCamera.CFrame = CFrame.lookAt(
+				Vector3.new(8 * math.cos(RotationAngle), 0, 8 * math.sin(RotationAngle)),
+				Vector3.new(0, 0, 0)
+			)
+		end)
+	)
 
 	return Scope:Image(OnyxUI.Util.CombineProps(Props, {
 		Name = script.Name,

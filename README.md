@@ -1,3 +1,17 @@
+> [!NOTE]
+> **Performance fork** of [loneka/avalog](https://github.com/loneka/avalog) 0.1.13. Same features and look,
+> but switching categories (Body, Clothing, ...) no longer freezes the game:
+>
+> - Item buttons are pooled and reused: a category switch relabels existing buttons instead of rebuilding them.
+>   New buttons are built within a small time budget per frame. Category and sub-category tabs are reused the same way.
+> - Each button's Buy/details row is only built once that item is equipped.
+> - A category click runs one catalog search instead of several, late results from an old search are ignored,
+>   and finished searches are cached for the session, so going back to a category is instant.
+> - Page loads no longer overlap when scrolling, and failed searches are retried next time.
+> - The avatar preview and the clock stop updating while the menu is closed.
+>
+> Measured in a Studio playtest: Body click 67 ms → 24 ms blocked, worst frame after switching 133–290 ms → about 30 ms.
+
 <p align="center">
   <a href="https://loneka.com/avalog">
     <picture>

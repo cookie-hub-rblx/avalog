@@ -1,3 +1,5 @@
+local RunService = game:GetService("RunService")
+
 local Avalog = script.Parent.Parent.Parent.Parent.Parent
 local OnyxUI = require(Avalog.Parent.OnyxUI)
 local Fusion = require(Avalog.Parent.Fusion)
@@ -6,6 +8,9 @@ local States = require(Avalog.SourceCode.Client.UI.States)
 local Children = Fusion.Children
 local Out = Fusion.Out
 local OnChange = Fusion.OnChange
+
+-- Time per frame spent building new item buttons (at least one is built per frame)
+local BUILD_BUDGET_SECONDS = 0.004
 
 export type Props = { [string]: any } & {
 	Shown: Fusion.UsedAs<boolean>?,
@@ -27,6 +32,38 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 	local AbsoluteWindowSize = Scope:Value(Vector2.new())
 
 	local LastUpdated = 0
+
+	-- Buttons are built a few per frame, so a new page never freezes a frame.
+	-- Slots are kept when the item list changes and simply hide when empty.
+	local ItemCount = Scope:Computed(function(Use)
+		return #Use(Items)
+	end)
+	local SlotCount = Scope:Value(0)
+	local Slots = Scope:Computed(function(Use)
+		local SlotCountValue = Use(SlotCount)
+		local SlotList = table.create(SlotCountValue)
+		for Index = 1, SlotCountValue do
+			SlotList[Index] = Index
+		end
+		return SlotList
+	end)
+	table.insert(
+		Scope,
+		RunService.Heartbeat:Connect(function()
+			local SlotCountValue = Fusion.peek(SlotCount)
+			local ItemCountValue = Fusion.peek(ItemCount)
+			-- At least one per frame, then more while the frame budget lasts
+			local Started = os.clock()
+			while SlotCountValue < ItemCountValue do
+				SlotCountValue += 1
+				SlotCount:set(SlotCountValue)
+
+				if os.clock() - Started > BUILD_BUDGET_SECONDS then
+					break
+				end
+			end
+		end)
+	)
 
 	local ItemsTab = Scope:Hydrate(Scope:Scroller(OnyxUI.Util.CombineProps(Props, {
 		Name = script.Name,
@@ -72,23 +109,43 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 				AutomaticSize = Enum.AutomaticSize.Y,
 
 				[Children] = {
-					Scope:ForPairs(Items, function(Use, Scope, Index, Item)
-						return Index,
-							OnyxUI.Themer.Theme:is(Use(States.Theme)):during(function()
-								return Scope:ItemButton {
-									Id = Item.Id,
-									Type = Item.Type,
-									Featured = Item.Featured,
-									Visible = Item.Visible,
-									Owned = Item.Owned,
-									LayoutOrder = Index,
-									Size = UDim2.fromScale(1 / 8, 0),
-									AutomaticSize = Enum.AutomaticSize.Y,
-									MinSize = Scope:Computed(function(Use)
-										return Vector2.new(Use(Theme.Spacing["8"]), 0)
-									end),
-								}
-							end)
+					Scope:ForValues(Slots, function(Use, Scope, Index)
+						-- Each slot shows whichever item sits at its index, so switching
+						-- categories updates the existing buttons instead of rebuilding them.
+						local Item = Scope:Computed(function(Use)
+							return Use(Items)[Index]
+						end)
+
+						return OnyxUI.Themer.Theme:is(Use(States.Theme)):during(function()
+							return Scope:ItemButton {
+								Id = Scope:Computed(function(Use)
+									local ItemValue = Use(Item)
+									return ItemValue and ItemValue.Id
+								end),
+								Type = Scope:Computed(function(Use)
+									local ItemValue = Use(Item)
+									return (ItemValue and ItemValue.Type) or Enum.AvatarItemType.Asset
+								end),
+								Featured = Scope:Computed(function(Use)
+									local ItemValue = Use(Item)
+									return (ItemValue and ItemValue.Featured) == true
+								end),
+								Owned = Scope:Computed(function(Use)
+									local ItemValue = Use(Item)
+									return (ItemValue and ItemValue.Owned) == true
+								end),
+								Visible = Scope:Computed(function(Use)
+									local ItemValue = Use(Item)
+									return ItemValue ~= nil and ItemValue.Visible ~= false
+								end),
+								LayoutOrder = Index,
+								Size = UDim2.fromScale(1 / 8, 0),
+								AutomaticSize = Enum.AutomaticSize.Y,
+								MinSize = Scope:Computed(function(Use)
+									return Vector2.new(Use(Theme.Spacing["8"]), 0)
+								end),
+							}
+						end)
 					end),
 				},
 			},

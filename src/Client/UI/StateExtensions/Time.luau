@@ -4,6 +4,8 @@
 
 local RunService = game:GetService("RunService")
 
+local Avalog = script.Parent.Parent.Parent.Parent.Parent
+local Fusion = require(Avalog.Parent.Fusion)
 local States = require(script.Parent.Parent.States)
 
 local Time = {
@@ -12,12 +14,18 @@ local Time = {
 
 function Time.Start(self: typeof(Time))
 	self._RenderStep = RunService.RenderStepped:Connect(function()
-		States.UnixTimestamp:set(DateTime.now().UnixTimestampMillis)
+		-- Only animations inside the open menu read this
+		if Fusion.peek(States.Open) then
+			States.UnixTimestamp:set(DateTime.now().UnixTimestampMillis)
+		end
 	end)
 end
 
 function Time.Destroy(self: typeof(Time))
-	self._RenderStep:Destroy()
+	if self._RenderStep ~= nil then
+		self._RenderStep:Disconnect()
+		self._RenderStep = nil
+	end
 end
 
 return Time

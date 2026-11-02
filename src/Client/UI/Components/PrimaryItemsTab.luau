@@ -30,7 +30,10 @@ local Children = Fusion.Children
 
 local CatalogItemsTab = require(script.Parent.CatalogItemsTab)
 
-export type Props = CatalogItemsTab.Props & {}
+export type Props = CatalogItemsTab.Props & {
+	-- false for the plain marketplace categories: no pinned items, no cloud config wait
+	Primary: Fusion.UsedAs<boolean>?,
+}
 
 return function(Scope: Fusion.Scope<any>, Props: Props)
 	local Scope = Fusion.innerScope(Scope, Fusion, OnyxUI.Util, OnyxUI.Components, {
@@ -40,6 +43,8 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 	})
 	local Theme = OnyxUI.Themer.Theme:now()
 
+	local Primary = OnyxUI.Util.Fallback(Props.Primary, true)
+
 	local CloudConfigLoaded = Scope:Computed(function(Use)
 		return Use(States.CloudConfig).latestVersion ~= "0.0.0"
 	end)
@@ -47,7 +52,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 	return Scope:CatalogItemsTab(OnyxUI.Util.CombineProps(Props, {
 		Name = script.Name,
 		PrefixItems = Scope:Computed(function(Use)
-			if CURATED_SHOWN then
+			if CURATED_SHOWN and Use(Primary) then
 				local PinnedItems = Use(States.CloudConfig).pinnedItems
 
 				for _, Item in PinnedItems do
@@ -66,13 +71,15 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 
 			return {}
 		end),
-		LoadItems = CloudConfigLoaded,
+		LoadItems = Scope:Computed(function(Use)
+			return (not Use(Primary)) or Use(CloudConfigLoaded)
+		end),
 
 		[Children] = {
 			Scope:Computed(function(Use)
 				local CloudConfigFailedValue = Use(CloudConfigLoaded)
 
-				if CloudConfigFailedValue then
+				if CloudConfigFailedValue or not Use(Primary) then
 					return
 				end
 
