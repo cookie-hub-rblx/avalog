@@ -21,6 +21,16 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 
 	local AvatarManager = ServiceProvider:GetAvatarManager()
 
+	-- Reset throws away every change, so it needs a second tap
+	local ConfirmingReset = Scope:Value(false)
+	local ResetToken = 0
+
+	-- Undo/redo history isn't kept on the Equipped tab
+	local OnEquippedTab = Scope:Computed(function(Use)
+		local Category = Use(Navigation.Category)
+		return Category ~= nil and Category.Name == "Equipped"
+	end)
+
 	local ViewportCamera = Scope:New "Camera" {
 		CFrame = CFrame.lookAt(Vector3.new(4, 0, -8), Vector3.new(0, 0, 0)),
 		CameraType = Enum.CameraType.Scriptable,
@@ -139,7 +149,15 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 								[Children] = {
 									Scope:Button {
 										Name = "CheckoutButton",
-										Content = { "rbxassetid://13846738861", "Buy" },
+										-- Buys what the player doesn't own; with nothing to buy it
+										-- offers to save the look to their Roblox avatar instead.
+										Content = Scope:Computed(function(Use)
+											local Count = Use(States.Avatar.UnownedCount)
+											if Count > 0 then
+												return { "rbxassetid://13846738861", `Buy {Count}` }
+											end
+											return { "Use on Roblox" }
+										end),
 										SizeVariant = "Large",
 										Disabled = States.Checkout.Loading,
 
@@ -199,12 +217,11 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 
 								[Children] = {
 									Scope:Button {
-										Content = { "rbxassetid://13846120661" },
-										SizeVariant = "Large",
+										Name = "UndoButton",
+										Content = { "rbxassetid://13846120661", "Undo" },
+										SizeVariant = "Medium",
 										Disabled = Scope:Computed(function(Use)
-											local DataHistoryValue = Use(States.Avatar.DataHistory)
-											local Category = Use(Navigation.Category)
-											return (#DataHistoryValue <= 1) or (Category.Name == "Equipped")
+											return (#Use(States.Avatar.DataHistory) <= 1) or Use(OnEquippedTab)
 										end),
 
 										OnActivated = function()
@@ -212,21 +229,38 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 										end,
 									},
 									Scope:Button {
-										Content = { "rbxassetid://13847364382" },
-										SizeVariant = "Large",
+										Name = "ResetButton",
+										Content = Scope:Computed(function(Use)
+											return { "rbxassetid://13847364382", if Use(ConfirmingReset) then "Sure?" else "Reset" }
+										end),
+										SizeVariant = "Medium",
 										Color = Theme.Colors.Error.Main,
+										Style = Scope:Computed(function(Use)
+											return if Use(ConfirmingReset) then "Filled" else "Outlined"
+										end),
 
 										OnActivated = function()
-											AvatarManager:Reset()
+											if Fusion.peek(ConfirmingReset) then
+												ConfirmingReset:set(false)
+												AvatarManager:Reset()
+											else
+												ConfirmingReset:set(true)
+												ResetToken += 1
+												local Token = ResetToken
+												task.delay(3, function()
+													if Token == ResetToken then
+														ConfirmingReset:set(false)
+													end
+												end)
+											end
 										end,
 									},
 									Scope:Button {
-										Content = { "rbxassetid://13846158505" },
-										SizeVariant = "Large",
+										Name = "RedoButton",
+										Content = { "rbxassetid://13846158505", "Redo" },
+										SizeVariant = "Medium",
 										Disabled = Scope:Computed(function(Use)
-											local UndoHistoryValue = Use(States.Avatar.UndoHistory)
-											local Category = Use(Navigation.Category)
-											return (#UndoHistoryValue == 0) or (Category == "Equipped")
+											return (#Use(States.Avatar.UndoHistory) == 0) or Use(OnEquippedTab)
 										end),
 
 										OnActivated = function()

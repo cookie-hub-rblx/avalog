@@ -135,13 +135,25 @@ if not RunService:IsRunning() then
 		UpdateAvatar = table.freeze({
 			Fire = noop
 		}),
+		SaveOutfit = table.freeze({
+			Call = noop
+		}),
+		RenameOutfit = table.freeze({
+			Call = noop
+		}),
 		RecordPurchase = table.freeze({
 			Fire = noop
 		}),
 		RecordMenuToggle = table.freeze({
 			Fire = noop
 		}),
+		GetOutfits = table.freeze({
+			Call = noop
+		}),
 		GetCloudConfig = table.freeze({
+			Call = noop
+		}),
+		DeleteOutfit = table.freeze({
 			Call = noop
 		}),
 		CloudConfigReset = table.freeze({
@@ -157,63 +169,12 @@ local remotes = ReplicatedStorage:WaitForChild("ZAP")
 local reliable = remotes:WaitForChild("AVALOG_RELIABLE")
 assert(reliable:IsA("RemoteEvent"), "Expected AVALOG_RELIABLE to be a RemoteEvent")
 
-export type ItemType = ("Asset" | "Bundle")
-export type SerEnumItem = ({
-	["EnumType"]: (string),
-	["Value"]: (number),
-})
-export type AvatarItem = ({
-	["Id"]: (number),
-	["Type"]: ({
-		["EnumType"]: (string),
-		["Value"]: (number),
-	}),
-	["AssetType"]: ({
-		["EnumType"]: (string),
-		["Value"]: (number),
-	}),
-	["Name"]: (string),
-})
 export type BulkPurchaseAvatarItem = ({
 	["Id"]: (string),
 	["Type"]: ({
 		["EnumType"]: (string),
 		["Value"]: (number),
 	}),
-})
-export type CloudConfig = ({
-	["latestVersion"]: (string),
-	["featuredItems"]: ({ ({
-		["itemId"]: (string),
-		["itemType"]: ("Asset" | "Bundle"),
-	}) }),
-	["pinnedItems"]: ({ ({
-		["itemId"]: (string),
-		["itemType"]: ("Asset" | "Bundle"),
-	}) }),
-	["promotedItems"]: ({ ({
-		["itemId"]: (string),
-		["itemType"]: ("Asset" | "Bundle"),
-		["promotionId"]: (string),
-		["bid"]: (number),
-		["startTime"]: (number),
-		["endTime"]: (number),
-	}) }),
-	["cosmeticItems"]: ({ ({
-		["itemId"]: (string),
-		["itemType"]: ("Asset" | "Bundle"),
-		["tintColor"]: ((string)?),
-		["groupPurchase"]: (boolean),
-		["groupId"]: ((string)?),
-	}) }),
-})
-export type PromotedItem = ({
-	["itemId"]: (string),
-	["itemType"]: ("Asset" | "Bundle"),
-	["promotionId"]: (string),
-	["bid"]: (number),
-	["startTime"]: (number),
-	["endTime"]: (number),
 })
 export type CosmeticItem = ({
 	["itemId"]: (string),
@@ -222,9 +183,68 @@ export type CosmeticItem = ({
 	["groupPurchase"]: (boolean),
 	["groupId"]: ((string)?),
 })
-export type Item = ({
-	["itemId"]: (string),
-	["itemType"]: ("Asset" | "Bundle"),
+export type Outfit = ({
+	["Name"]: (string),
+	["Data"]: ({
+		["Accessories"]: ({ ({
+			["AssetId"]: (number),
+			["AccessoryType"]: ({
+				["EnumType"]: (string),
+				["Value"]: (number),
+			}),
+			["Order"]: ((number)?),
+			["Puffiness"]: ((number)?),
+			["IsLayered"]: ((boolean)?),
+			["Position"]: ((Vector3)?),
+			["Rotation"]: ((Vector3)?),
+			["Scale"]: ((Vector3)?),
+		}) }),
+		["Emotes"]: ({ [(string)]: ({ (number) }) }),
+		["EquippedEmotes"]: ({ ({
+			["Name"]: (string),
+			["Slot"]: (number),
+		}) }),
+		["Face"]: (number),
+		["Scale"]: ({
+			["BodyType"]: (number),
+			["Depth"]: (number),
+			["Head"]: (number),
+			["Height"]: (number),
+			["Proportion"]: (number),
+			["Width"]: (number),
+		}),
+		["Animations"]: ({
+			["Walk"]: (number),
+			["Run"]: (number),
+			["Fall"]: (number),
+			["Climb"]: (number),
+			["Swim"]: (number),
+			["Idle"]: (number),
+			["Mood"]: (number),
+			["Jump"]: (number),
+		}),
+		["BodyParts"]: ({
+			["Head"]: (number),
+			["Torso"]: (number),
+			["LeftArm"]: (number),
+			["RightArm"]: (number),
+			["LeftLeg"]: (number),
+			["RightLeg"]: (number),
+		}),
+		["BodyPartColors"]: ({
+			["Head"]: (Color3),
+			["Torso"]: (Color3),
+			["LeftArm"]: (Color3),
+			["RightArm"]: (Color3),
+			["LeftLeg"]: (Color3),
+			["RightLeg"]: (Color3),
+		}),
+		["Clothing"]: ({
+			["Shirt"]: (number),
+			["TShirt"]: (number),
+			["Pants"]: (number),
+		}),
+	}),
 })
 export type HumanoidDescriberData = ({
 	["Accessories"]: ({ ({
@@ -286,6 +306,85 @@ export type HumanoidDescriberData = ({
 		["Pants"]: (number),
 	}),
 })
+export type PromotedItem = ({
+	["itemId"]: (string),
+	["itemType"]: ("Asset" | "Bundle"),
+	["promotionId"]: (string),
+	["bid"]: (number),
+	["startTime"]: (number),
+	["endTime"]: (number),
+})
+export type OutfitsResult = ({
+	["Ok"]: (boolean),
+	["Message"]: ((string)?),
+	["Outfits"]: ({ ({
+		["Name"]: (string),
+		["Data"]: ({
+			["Accessories"]: ({ ({
+				["AssetId"]: (number),
+				["AccessoryType"]: ({
+					["EnumType"]: (string),
+					["Value"]: (number),
+				}),
+				["Order"]: ((number)?),
+				["Puffiness"]: ((number)?),
+				["IsLayered"]: ((boolean)?),
+				["Position"]: ((Vector3)?),
+				["Rotation"]: ((Vector3)?),
+				["Scale"]: ((Vector3)?),
+			}) }),
+			["Emotes"]: ({ [(string)]: ({ (number) }) }),
+			["EquippedEmotes"]: ({ ({
+				["Name"]: (string),
+				["Slot"]: (number),
+			}) }),
+			["Face"]: (number),
+			["Scale"]: ({
+				["BodyType"]: (number),
+				["Depth"]: (number),
+				["Head"]: (number),
+				["Height"]: (number),
+				["Proportion"]: (number),
+				["Width"]: (number),
+			}),
+			["Animations"]: ({
+				["Walk"]: (number),
+				["Run"]: (number),
+				["Fall"]: (number),
+				["Climb"]: (number),
+				["Swim"]: (number),
+				["Idle"]: (number),
+				["Mood"]: (number),
+				["Jump"]: (number),
+			}),
+			["BodyParts"]: ({
+				["Head"]: (number),
+				["Torso"]: (number),
+				["LeftArm"]: (number),
+				["RightArm"]: (number),
+				["LeftLeg"]: (number),
+				["RightLeg"]: (number),
+			}),
+			["BodyPartColors"]: ({
+				["Head"]: (Color3),
+				["Torso"]: (Color3),
+				["LeftArm"]: (Color3),
+				["RightArm"]: (Color3),
+				["LeftLeg"]: (Color3),
+				["RightLeg"]: (Color3),
+			}),
+			["Clothing"]: ({
+				["Shirt"]: (number),
+				["TShirt"]: (number),
+				["Pants"]: (number),
+			}),
+		}),
+	}) }),
+})
+export type SerEnumItem = ({
+	["EnumType"]: (string),
+	["Value"]: (number),
+})
 export type AccessorySpec = ({
 	["AssetId"]: (number),
 	["AccessoryType"]: ({
@@ -299,9 +398,47 @@ export type AccessorySpec = ({
 	["Rotation"]: ((Vector3)?),
 	["Scale"]: ((Vector3)?),
 })
+export type AvatarItem = ({
+	["Id"]: (number),
+	["Type"]: ({
+		["EnumType"]: (string),
+		["Value"]: (number),
+	}),
+	["AssetType"]: ({
+		["EnumType"]: (string),
+		["Value"]: (number),
+	}),
+	["Name"]: (string),
+})
 export type EquippedEmote = ({
 	["Name"]: (string),
 	["Slot"]: (number),
+})
+export type CloudConfig = ({
+	["latestVersion"]: (string),
+	["featuredItems"]: ({ ({
+		["itemId"]: (string),
+		["itemType"]: ("Asset" | "Bundle"),
+	}) }),
+	["pinnedItems"]: ({ ({
+		["itemId"]: (string),
+		["itemType"]: ("Asset" | "Bundle"),
+	}) }),
+	["promotedItems"]: ({ ({
+		["itemId"]: (string),
+		["itemType"]: ("Asset" | "Bundle"),
+		["promotionId"]: (string),
+		["bid"]: (number),
+		["startTime"]: (number),
+		["endTime"]: (number),
+	}) }),
+	["cosmeticItems"]: ({ ({
+		["itemId"]: (string),
+		["itemType"]: ("Asset" | "Bundle"),
+		["tintColor"]: ((string)?),
+		["groupPurchase"]: (boolean),
+		["groupId"]: ((string)?),
+	}) }),
 })
 export type CatalogItem = ({
 	["AssetId"]: (number),
@@ -314,6 +451,11 @@ export type CatalogItem = ({
 		["EnumType"]: (string),
 		["Value"]: (number),
 	}),
+})
+export type ItemType = ("Asset" | "Bundle")
+export type Item = ({
+	["itemId"]: (string),
+	["itemType"]: ("Asset" | "Bundle"),
 })
 
 local function SendEvents()
@@ -332,11 +474,15 @@ end
 
 RunService.Heartbeat:Connect(SendEvents)
 
-local reliable_events = table.create(2)
-local reliable_event_queue: { [number]: { any } } = table.create(2)
+local reliable_events = table.create(6)
+local reliable_event_queue: { [number]: { any } } = table.create(6)
 local function_call_id = 0
 reliable_event_queue[0] = 0
+reliable_event_queue[3] = table.create(255)
+reliable_event_queue[4] = table.create(255)
+reliable_event_queue[2] = table.create(255)
 reliable_event_queue[1] = table.create(255)
+reliable_event_queue[5] = table.create(255)
 reliable.OnClientEvent:Connect(function(buff, inst)
 	incoming_buff = buff
 	incoming_inst = inst
@@ -355,91 +501,511 @@ reliable.OnClientEvent:Connect(function(buff, inst)
 					warn(`[ZAP] {reliable_event_queue[0]} events in queue for CloudConfigReset. Did you forget to attach a listener?`)
 				end
 			end
-		elseif id == 1 then -- GetCloudConfig
+		elseif id == 3 then -- SaveOutfit
 			local call_id = buffer.readu8(incoming_buff, read(1))
 			local value
 			local bool_1 = buffer.readu8(incoming_buff, read(1))
-			if bit32.btest(bool_1, 0b0000000000000001) then
-				value = {  }
-				local len_1 = buffer.readu16(incoming_buff, read(2))
-				value["latestVersion"] = buffer.readstring(incoming_buff, read(len_1), len_1)
-				local len_2 = buffer.readu16(incoming_buff, read(2))
-				value["featuredItems"] = table.create(len_2)
-				for i_1 = 1, len_2 do
-					local bool_2 = buffer.readu8(incoming_buff, read(1))
-					local val_1
-					val_1 = {  }
-					local len_3 = buffer.readu16(incoming_buff, read(2))
-					val_1["itemId"] = buffer.readstring(incoming_buff, read(len_3), len_3)
-					if bit32.btest(bool_2, 0b0000000000000001) then
-						val_1["itemType"] = "Asset"
-					else
-						val_1["itemType"] = "Bundle"
-					end
-					value["featuredItems"][i_1] = val_1
-				end
+			value = {  }
+			value["Ok"] = bit32.btest(bool_1, 0b0000000000000001)
+			if bit32.btest(bool_1, 0b0000000000000010) then
+				local len_1 = buffer.readu8(incoming_buff, read(1))
+				assert(len_1 >= 0, "value is less than 0!")
+				assert(len_1 <= 120, "value is more than 120!")
+				value["Message"] = buffer.readstring(incoming_buff, read(len_1), len_1)
+			else
+				value["Message"] = nil
+			end
+			local len_2 = buffer.readu8(incoming_buff, read(1))
+			assert(len_2 >= 0, "value is less than 0!")
+			assert(len_2 <= 20, "value is more than 20!")
+			value["Outfits"] = table.create(len_2)
+			for i_1 = 1, len_2 do
+				local bool_3 = buffer.readu8(incoming_buff, read(1))
+				local val_1
+				val_1 = {  }
+				local len_3 = buffer.readu8(incoming_buff, read(1))
+				assert(len_3 >= 0, "value is less than 0!")
+				assert(len_3 <= 40, "value is more than 40!")
+				val_1["Name"] = buffer.readstring(incoming_buff, read(len_3), len_3)
+				val_1["Data"] = {  }
 				local len_4 = buffer.readu16(incoming_buff, read(2))
-				value["pinnedItems"] = table.create(len_4)
+				val_1["Data"]["Accessories"] = table.create(len_4)
 				for i_2 = 1, len_4 do
-					local bool_3 = buffer.readu8(incoming_buff, read(1))
+					local bool_2 = buffer.readu8(incoming_buff, read(1))
 					local val_2
 					val_2 = {  }
+					val_2["AssetId"] = buffer.readf64(incoming_buff, read(8))
+					val_2["AccessoryType"] = {  }
 					local len_5 = buffer.readu16(incoming_buff, read(2))
-					val_2["itemId"] = buffer.readstring(incoming_buff, read(len_5), len_5)
-					if bit32.btest(bool_3, 0b0000000000000001) then
-						val_2["itemType"] = "Asset"
+					val_2["AccessoryType"]["EnumType"] = buffer.readstring(incoming_buff, read(len_5), len_5)
+					val_2["AccessoryType"]["Value"] = buffer.readu16(incoming_buff, read(2))
+					if bit32.btest(bool_2, 0b0000000000000001) then
+						val_2["Order"] = buffer.readu16(incoming_buff, read(2))
 					else
-						val_2["itemType"] = "Bundle"
+						val_2["Order"] = nil
 					end
-					value["pinnedItems"][i_2] = val_2
-				end
-				local len_6 = buffer.readu16(incoming_buff, read(2))
-				value["promotedItems"] = table.create(len_6)
-				for i_3 = 1, len_6 do
-					local bool_4 = buffer.readu8(incoming_buff, read(1))
-					local val_3
-					val_3 = {  }
-					local len_7 = buffer.readu16(incoming_buff, read(2))
-					val_3["itemId"] = buffer.readstring(incoming_buff, read(len_7), len_7)
-					if bit32.btest(bool_4, 0b0000000000000001) then
-						val_3["itemType"] = "Asset"
+					if bit32.btest(bool_2, 0b0000000000000010) then
+						val_2["Puffiness"] = buffer.readf32(incoming_buff, read(4))
 					else
-						val_3["itemType"] = "Bundle"
+						val_2["Puffiness"] = nil
 					end
-					local len_8 = buffer.readu16(incoming_buff, read(2))
-					val_3["promotionId"] = buffer.readstring(incoming_buff, read(len_8), len_8)
-					val_3["bid"] = buffer.readf32(incoming_buff, read(4))
-					val_3["startTime"] = buffer.readf32(incoming_buff, read(4))
-					val_3["endTime"] = buffer.readf32(incoming_buff, read(4))
-					value["promotedItems"][i_3] = val_3
+					if bit32.btest(bool_2, 0b0000000000000100) then
+						val_2["IsLayered"] = bit32.btest(bool_2, 0b0000000000001000)
+					else
+						val_2["IsLayered"] = nil
+					end
+					if bit32.btest(bool_2, 0b0000000000010000) then
+						val_2["Position"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_2["Position"] = nil
+					end
+					if bit32.btest(bool_2, 0b0000000000100000) then
+						val_2["Rotation"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_2["Rotation"] = nil
+					end
+					if bit32.btest(bool_2, 0b0000000001000000) then
+						val_2["Scale"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_2["Scale"] = nil
+					end
+					val_1["Data"]["Accessories"][i_2] = val_2
 				end
-				local len_9 = buffer.readu16(incoming_buff, read(2))
-				value["cosmeticItems"] = table.create(len_9)
-				for i_4 = 1, len_9 do
+				val_1["Data"]["Emotes"] = {  }
+				if not bit32.btest(bool_3, 0b0000000000000001) then
+					for _ = 1, buffer.readu16(incoming_buff, read(2)) + 1 do
+						local key_1
+						local val_3
+						local len_6 = buffer.readu16(incoming_buff, read(2))
+						key_1 = buffer.readstring(incoming_buff, read(len_6), len_6)
+						local len_7 = buffer.readu16(incoming_buff, read(2))
+						val_3 = table.create(len_7)
+						for i_3 = 1, len_7 do
+							local val_4
+							val_4 = buffer.readf64(incoming_buff, read(8))
+							val_3[i_3] = val_4
+						end
+						val_1["Data"]["Emotes"][key_1] = val_3
+					end
+				end
+				local len_8 = buffer.readu16(incoming_buff, read(2))
+				val_1["Data"]["EquippedEmotes"] = table.create(len_8)
+				for i_4 = 1, len_8 do
+					local val_5
+					val_5 = {  }
+					local len_9 = buffer.readu16(incoming_buff, read(2))
+					val_5["Name"] = buffer.readstring(incoming_buff, read(len_9), len_9)
+					val_5["Slot"] = buffer.readu16(incoming_buff, read(2))
+					val_1["Data"]["EquippedEmotes"][i_4] = val_5
+				end
+				val_1["Data"]["Face"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Scale"] = {  }
+				val_1["Data"]["Scale"]["BodyType"] = buffer.readf32(incoming_buff, read(4))
+				val_1["Data"]["Scale"]["Depth"] = buffer.readf32(incoming_buff, read(4))
+				val_1["Data"]["Scale"]["Head"] = buffer.readf32(incoming_buff, read(4))
+				val_1["Data"]["Scale"]["Height"] = buffer.readf32(incoming_buff, read(4))
+				val_1["Data"]["Scale"]["Proportion"] = buffer.readf32(incoming_buff, read(4))
+				val_1["Data"]["Scale"]["Width"] = buffer.readf32(incoming_buff, read(4))
+				val_1["Data"]["Animations"] = {  }
+				val_1["Data"]["Animations"]["Walk"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Run"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Fall"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Climb"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Swim"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Idle"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Mood"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Animations"]["Jump"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyParts"] = {  }
+				val_1["Data"]["BodyParts"]["Head"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyParts"]["Torso"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyParts"]["LeftArm"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyParts"]["RightArm"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyParts"]["LeftLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyParts"]["RightLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["BodyPartColors"] = {  }
+				val_1["Data"]["BodyPartColors"]["Head"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_1["Data"]["BodyPartColors"]["Torso"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_1["Data"]["BodyPartColors"]["LeftArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_1["Data"]["BodyPartColors"]["RightArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_1["Data"]["BodyPartColors"]["LeftLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_1["Data"]["BodyPartColors"]["RightLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_1["Data"]["Clothing"] = {  }
+				val_1["Data"]["Clothing"]["Shirt"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Clothing"]["TShirt"] = buffer.readf64(incoming_buff, read(8))
+				val_1["Data"]["Clothing"]["Pants"] = buffer.readf64(incoming_buff, read(8))
+				value["Outfits"][i_1] = val_1
+			end
+			local thread = reliable_event_queue[3][call_id]
+			-- When using actors it's possible for multiple Zap clients to exist, but only one called the Zap remote function.
+			if thread then
+				task.spawn(thread, value)
+			end
+			reliable_event_queue[3][call_id] = nil
+		elseif id == 4 then -- RenameOutfit
+			local call_id = buffer.readu8(incoming_buff, read(1))
+			local value
+			local bool_4 = buffer.readu8(incoming_buff, read(1))
+			value = {  }
+			value["Ok"] = bit32.btest(bool_4, 0b0000000000000001)
+			if bit32.btest(bool_4, 0b0000000000000010) then
+				local len_10 = buffer.readu8(incoming_buff, read(1))
+				assert(len_10 >= 0, "value is less than 0!")
+				assert(len_10 <= 120, "value is more than 120!")
+				value["Message"] = buffer.readstring(incoming_buff, read(len_10), len_10)
+			else
+				value["Message"] = nil
+			end
+			local len_11 = buffer.readu8(incoming_buff, read(1))
+			assert(len_11 >= 0, "value is less than 0!")
+			assert(len_11 <= 20, "value is more than 20!")
+			value["Outfits"] = table.create(len_11)
+			for i_5 = 1, len_11 do
+				local bool_6 = buffer.readu8(incoming_buff, read(1))
+				local val_6
+				val_6 = {  }
+				local len_12 = buffer.readu8(incoming_buff, read(1))
+				assert(len_12 >= 0, "value is less than 0!")
+				assert(len_12 <= 40, "value is more than 40!")
+				val_6["Name"] = buffer.readstring(incoming_buff, read(len_12), len_12)
+				val_6["Data"] = {  }
+				local len_13 = buffer.readu16(incoming_buff, read(2))
+				val_6["Data"]["Accessories"] = table.create(len_13)
+				for i_6 = 1, len_13 do
 					local bool_5 = buffer.readu8(incoming_buff, read(1))
-					local val_4
-					val_4 = {  }
-					local len_10 = buffer.readu16(incoming_buff, read(2))
-					val_4["itemId"] = buffer.readstring(incoming_buff, read(len_10), len_10)
+					local val_7
+					val_7 = {  }
+					val_7["AssetId"] = buffer.readf64(incoming_buff, read(8))
+					val_7["AccessoryType"] = {  }
+					local len_14 = buffer.readu16(incoming_buff, read(2))
+					val_7["AccessoryType"]["EnumType"] = buffer.readstring(incoming_buff, read(len_14), len_14)
+					val_7["AccessoryType"]["Value"] = buffer.readu16(incoming_buff, read(2))
 					if bit32.btest(bool_5, 0b0000000000000001) then
-						val_4["itemType"] = "Asset"
+						val_7["Order"] = buffer.readu16(incoming_buff, read(2))
 					else
-						val_4["itemType"] = "Bundle"
+						val_7["Order"] = nil
 					end
 					if bit32.btest(bool_5, 0b0000000000000010) then
-						local len_11 = buffer.readu16(incoming_buff, read(2))
-						val_4["tintColor"] = buffer.readstring(incoming_buff, read(len_11), len_11)
+						val_7["Puffiness"] = buffer.readf32(incoming_buff, read(4))
 					else
-						val_4["tintColor"] = nil
+						val_7["Puffiness"] = nil
 					end
-					val_4["groupPurchase"] = bit32.btest(bool_5, 0b0000000000000100)
-					if bit32.btest(bool_5, 0b0000000000001000) then
-						local len_12 = buffer.readu16(incoming_buff, read(2))
-						val_4["groupId"] = buffer.readstring(incoming_buff, read(len_12), len_12)
+					if bit32.btest(bool_5, 0b0000000000000100) then
+						val_7["IsLayered"] = bit32.btest(bool_5, 0b0000000000001000)
 					else
-						val_4["groupId"] = nil
+						val_7["IsLayered"] = nil
 					end
-					value["cosmeticItems"][i_4] = val_4
+					if bit32.btest(bool_5, 0b0000000000010000) then
+						val_7["Position"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_7["Position"] = nil
+					end
+					if bit32.btest(bool_5, 0b0000000000100000) then
+						val_7["Rotation"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_7["Rotation"] = nil
+					end
+					if bit32.btest(bool_5, 0b0000000001000000) then
+						val_7["Scale"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_7["Scale"] = nil
+					end
+					val_6["Data"]["Accessories"][i_6] = val_7
+				end
+				val_6["Data"]["Emotes"] = {  }
+				if not bit32.btest(bool_6, 0b0000000000000001) then
+					for _ = 1, buffer.readu16(incoming_buff, read(2)) + 1 do
+						local key_2
+						local val_8
+						local len_15 = buffer.readu16(incoming_buff, read(2))
+						key_2 = buffer.readstring(incoming_buff, read(len_15), len_15)
+						local len_16 = buffer.readu16(incoming_buff, read(2))
+						val_8 = table.create(len_16)
+						for i_7 = 1, len_16 do
+							local val_9
+							val_9 = buffer.readf64(incoming_buff, read(8))
+							val_8[i_7] = val_9
+						end
+						val_6["Data"]["Emotes"][key_2] = val_8
+					end
+				end
+				local len_17 = buffer.readu16(incoming_buff, read(2))
+				val_6["Data"]["EquippedEmotes"] = table.create(len_17)
+				for i_8 = 1, len_17 do
+					local val_10
+					val_10 = {  }
+					local len_18 = buffer.readu16(incoming_buff, read(2))
+					val_10["Name"] = buffer.readstring(incoming_buff, read(len_18), len_18)
+					val_10["Slot"] = buffer.readu16(incoming_buff, read(2))
+					val_6["Data"]["EquippedEmotes"][i_8] = val_10
+				end
+				val_6["Data"]["Face"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Scale"] = {  }
+				val_6["Data"]["Scale"]["BodyType"] = buffer.readf32(incoming_buff, read(4))
+				val_6["Data"]["Scale"]["Depth"] = buffer.readf32(incoming_buff, read(4))
+				val_6["Data"]["Scale"]["Head"] = buffer.readf32(incoming_buff, read(4))
+				val_6["Data"]["Scale"]["Height"] = buffer.readf32(incoming_buff, read(4))
+				val_6["Data"]["Scale"]["Proportion"] = buffer.readf32(incoming_buff, read(4))
+				val_6["Data"]["Scale"]["Width"] = buffer.readf32(incoming_buff, read(4))
+				val_6["Data"]["Animations"] = {  }
+				val_6["Data"]["Animations"]["Walk"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Run"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Fall"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Climb"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Swim"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Idle"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Mood"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Animations"]["Jump"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyParts"] = {  }
+				val_6["Data"]["BodyParts"]["Head"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyParts"]["Torso"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyParts"]["LeftArm"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyParts"]["RightArm"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyParts"]["LeftLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyParts"]["RightLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["BodyPartColors"] = {  }
+				val_6["Data"]["BodyPartColors"]["Head"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_6["Data"]["BodyPartColors"]["Torso"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_6["Data"]["BodyPartColors"]["LeftArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_6["Data"]["BodyPartColors"]["RightArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_6["Data"]["BodyPartColors"]["LeftLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_6["Data"]["BodyPartColors"]["RightLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_6["Data"]["Clothing"] = {  }
+				val_6["Data"]["Clothing"]["Shirt"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Clothing"]["TShirt"] = buffer.readf64(incoming_buff, read(8))
+				val_6["Data"]["Clothing"]["Pants"] = buffer.readf64(incoming_buff, read(8))
+				value["Outfits"][i_5] = val_6
+			end
+			local thread = reliable_event_queue[4][call_id]
+			-- When using actors it's possible for multiple Zap clients to exist, but only one called the Zap remote function.
+			if thread then
+				task.spawn(thread, value)
+			end
+			reliable_event_queue[4][call_id] = nil
+		elseif id == 2 then -- GetOutfits
+			local call_id = buffer.readu8(incoming_buff, read(1))
+			local value
+			local bool_7 = buffer.readu8(incoming_buff, read(1))
+			value = {  }
+			value["Ok"] = bit32.btest(bool_7, 0b0000000000000001)
+			if bit32.btest(bool_7, 0b0000000000000010) then
+				local len_19 = buffer.readu8(incoming_buff, read(1))
+				assert(len_19 >= 0, "value is less than 0!")
+				assert(len_19 <= 120, "value is more than 120!")
+				value["Message"] = buffer.readstring(incoming_buff, read(len_19), len_19)
+			else
+				value["Message"] = nil
+			end
+			local len_20 = buffer.readu8(incoming_buff, read(1))
+			assert(len_20 >= 0, "value is less than 0!")
+			assert(len_20 <= 20, "value is more than 20!")
+			value["Outfits"] = table.create(len_20)
+			for i_9 = 1, len_20 do
+				local bool_9 = buffer.readu8(incoming_buff, read(1))
+				local val_11
+				val_11 = {  }
+				local len_21 = buffer.readu8(incoming_buff, read(1))
+				assert(len_21 >= 0, "value is less than 0!")
+				assert(len_21 <= 40, "value is more than 40!")
+				val_11["Name"] = buffer.readstring(incoming_buff, read(len_21), len_21)
+				val_11["Data"] = {  }
+				local len_22 = buffer.readu16(incoming_buff, read(2))
+				val_11["Data"]["Accessories"] = table.create(len_22)
+				for i_10 = 1, len_22 do
+					local bool_8 = buffer.readu8(incoming_buff, read(1))
+					local val_12
+					val_12 = {  }
+					val_12["AssetId"] = buffer.readf64(incoming_buff, read(8))
+					val_12["AccessoryType"] = {  }
+					local len_23 = buffer.readu16(incoming_buff, read(2))
+					val_12["AccessoryType"]["EnumType"] = buffer.readstring(incoming_buff, read(len_23), len_23)
+					val_12["AccessoryType"]["Value"] = buffer.readu16(incoming_buff, read(2))
+					if bit32.btest(bool_8, 0b0000000000000001) then
+						val_12["Order"] = buffer.readu16(incoming_buff, read(2))
+					else
+						val_12["Order"] = nil
+					end
+					if bit32.btest(bool_8, 0b0000000000000010) then
+						val_12["Puffiness"] = buffer.readf32(incoming_buff, read(4))
+					else
+						val_12["Puffiness"] = nil
+					end
+					if bit32.btest(bool_8, 0b0000000000000100) then
+						val_12["IsLayered"] = bit32.btest(bool_8, 0b0000000000001000)
+					else
+						val_12["IsLayered"] = nil
+					end
+					if bit32.btest(bool_8, 0b0000000000010000) then
+						val_12["Position"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_12["Position"] = nil
+					end
+					if bit32.btest(bool_8, 0b0000000000100000) then
+						val_12["Rotation"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_12["Rotation"] = nil
+					end
+					if bit32.btest(bool_8, 0b0000000001000000) then
+						val_12["Scale"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_12["Scale"] = nil
+					end
+					val_11["Data"]["Accessories"][i_10] = val_12
+				end
+				val_11["Data"]["Emotes"] = {  }
+				if not bit32.btest(bool_9, 0b0000000000000001) then
+					for _ = 1, buffer.readu16(incoming_buff, read(2)) + 1 do
+						local key_3
+						local val_13
+						local len_24 = buffer.readu16(incoming_buff, read(2))
+						key_3 = buffer.readstring(incoming_buff, read(len_24), len_24)
+						local len_25 = buffer.readu16(incoming_buff, read(2))
+						val_13 = table.create(len_25)
+						for i_11 = 1, len_25 do
+							local val_14
+							val_14 = buffer.readf64(incoming_buff, read(8))
+							val_13[i_11] = val_14
+						end
+						val_11["Data"]["Emotes"][key_3] = val_13
+					end
+				end
+				local len_26 = buffer.readu16(incoming_buff, read(2))
+				val_11["Data"]["EquippedEmotes"] = table.create(len_26)
+				for i_12 = 1, len_26 do
+					local val_15
+					val_15 = {  }
+					local len_27 = buffer.readu16(incoming_buff, read(2))
+					val_15["Name"] = buffer.readstring(incoming_buff, read(len_27), len_27)
+					val_15["Slot"] = buffer.readu16(incoming_buff, read(2))
+					val_11["Data"]["EquippedEmotes"][i_12] = val_15
+				end
+				val_11["Data"]["Face"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Scale"] = {  }
+				val_11["Data"]["Scale"]["BodyType"] = buffer.readf32(incoming_buff, read(4))
+				val_11["Data"]["Scale"]["Depth"] = buffer.readf32(incoming_buff, read(4))
+				val_11["Data"]["Scale"]["Head"] = buffer.readf32(incoming_buff, read(4))
+				val_11["Data"]["Scale"]["Height"] = buffer.readf32(incoming_buff, read(4))
+				val_11["Data"]["Scale"]["Proportion"] = buffer.readf32(incoming_buff, read(4))
+				val_11["Data"]["Scale"]["Width"] = buffer.readf32(incoming_buff, read(4))
+				val_11["Data"]["Animations"] = {  }
+				val_11["Data"]["Animations"]["Walk"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Run"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Fall"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Climb"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Swim"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Idle"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Mood"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Animations"]["Jump"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyParts"] = {  }
+				val_11["Data"]["BodyParts"]["Head"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyParts"]["Torso"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyParts"]["LeftArm"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyParts"]["RightArm"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyParts"]["LeftLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyParts"]["RightLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["BodyPartColors"] = {  }
+				val_11["Data"]["BodyPartColors"]["Head"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_11["Data"]["BodyPartColors"]["Torso"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_11["Data"]["BodyPartColors"]["LeftArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_11["Data"]["BodyPartColors"]["RightArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_11["Data"]["BodyPartColors"]["LeftLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_11["Data"]["BodyPartColors"]["RightLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_11["Data"]["Clothing"] = {  }
+				val_11["Data"]["Clothing"]["Shirt"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Clothing"]["TShirt"] = buffer.readf64(incoming_buff, read(8))
+				val_11["Data"]["Clothing"]["Pants"] = buffer.readf64(incoming_buff, read(8))
+				value["Outfits"][i_9] = val_11
+			end
+			local thread = reliable_event_queue[2][call_id]
+			-- When using actors it's possible for multiple Zap clients to exist, but only one called the Zap remote function.
+			if thread then
+				task.spawn(thread, value)
+			end
+			reliable_event_queue[2][call_id] = nil
+		elseif id == 1 then -- GetCloudConfig
+			local call_id = buffer.readu8(incoming_buff, read(1))
+			local value
+			local bool_10 = buffer.readu8(incoming_buff, read(1))
+			if bit32.btest(bool_10, 0b0000000000000001) then
+				value = {  }
+				local len_28 = buffer.readu16(incoming_buff, read(2))
+				value["latestVersion"] = buffer.readstring(incoming_buff, read(len_28), len_28)
+				local len_29 = buffer.readu16(incoming_buff, read(2))
+				value["featuredItems"] = table.create(len_29)
+				for i_13 = 1, len_29 do
+					local bool_11 = buffer.readu8(incoming_buff, read(1))
+					local val_16
+					val_16 = {  }
+					local len_30 = buffer.readu16(incoming_buff, read(2))
+					val_16["itemId"] = buffer.readstring(incoming_buff, read(len_30), len_30)
+					if bit32.btest(bool_11, 0b0000000000000001) then
+						val_16["itemType"] = "Asset"
+					else
+						val_16["itemType"] = "Bundle"
+					end
+					value["featuredItems"][i_13] = val_16
+				end
+				local len_31 = buffer.readu16(incoming_buff, read(2))
+				value["pinnedItems"] = table.create(len_31)
+				for i_14 = 1, len_31 do
+					local bool_12 = buffer.readu8(incoming_buff, read(1))
+					local val_17
+					val_17 = {  }
+					local len_32 = buffer.readu16(incoming_buff, read(2))
+					val_17["itemId"] = buffer.readstring(incoming_buff, read(len_32), len_32)
+					if bit32.btest(bool_12, 0b0000000000000001) then
+						val_17["itemType"] = "Asset"
+					else
+						val_17["itemType"] = "Bundle"
+					end
+					value["pinnedItems"][i_14] = val_17
+				end
+				local len_33 = buffer.readu16(incoming_buff, read(2))
+				value["promotedItems"] = table.create(len_33)
+				for i_15 = 1, len_33 do
+					local bool_13 = buffer.readu8(incoming_buff, read(1))
+					local val_18
+					val_18 = {  }
+					local len_34 = buffer.readu16(incoming_buff, read(2))
+					val_18["itemId"] = buffer.readstring(incoming_buff, read(len_34), len_34)
+					if bit32.btest(bool_13, 0b0000000000000001) then
+						val_18["itemType"] = "Asset"
+					else
+						val_18["itemType"] = "Bundle"
+					end
+					local len_35 = buffer.readu16(incoming_buff, read(2))
+					val_18["promotionId"] = buffer.readstring(incoming_buff, read(len_35), len_35)
+					val_18["bid"] = buffer.readf32(incoming_buff, read(4))
+					val_18["startTime"] = buffer.readf32(incoming_buff, read(4))
+					val_18["endTime"] = buffer.readf32(incoming_buff, read(4))
+					value["promotedItems"][i_15] = val_18
+				end
+				local len_36 = buffer.readu16(incoming_buff, read(2))
+				value["cosmeticItems"] = table.create(len_36)
+				for i_16 = 1, len_36 do
+					local bool_14 = buffer.readu8(incoming_buff, read(1))
+					local val_19
+					val_19 = {  }
+					local len_37 = buffer.readu16(incoming_buff, read(2))
+					val_19["itemId"] = buffer.readstring(incoming_buff, read(len_37), len_37)
+					if bit32.btest(bool_14, 0b0000000000000001) then
+						val_19["itemType"] = "Asset"
+					else
+						val_19["itemType"] = "Bundle"
+					end
+					if bit32.btest(bool_14, 0b0000000000000010) then
+						local len_38 = buffer.readu16(incoming_buff, read(2))
+						val_19["tintColor"] = buffer.readstring(incoming_buff, read(len_38), len_38)
+					else
+						val_19["tintColor"] = nil
+					end
+					val_19["groupPurchase"] = bit32.btest(bool_14, 0b0000000000000100)
+					if bit32.btest(bool_14, 0b0000000000001000) then
+						local len_39 = buffer.readu16(incoming_buff, read(2))
+						val_19["groupId"] = buffer.readstring(incoming_buff, read(len_39), len_39)
+					else
+						val_19["groupId"] = nil
+					end
+					value["cosmeticItems"][i_16] = val_19
 				end
 			else
 				value = nil
@@ -450,6 +1016,146 @@ reliable.OnClientEvent:Connect(function(buff, inst)
 				task.spawn(thread, value)
 			end
 			reliable_event_queue[1][call_id] = nil
+		elseif id == 5 then -- DeleteOutfit
+			local call_id = buffer.readu8(incoming_buff, read(1))
+			local value
+			local bool_15 = buffer.readu8(incoming_buff, read(1))
+			value = {  }
+			value["Ok"] = bit32.btest(bool_15, 0b0000000000000001)
+			if bit32.btest(bool_15, 0b0000000000000010) then
+				local len_40 = buffer.readu8(incoming_buff, read(1))
+				assert(len_40 >= 0, "value is less than 0!")
+				assert(len_40 <= 120, "value is more than 120!")
+				value["Message"] = buffer.readstring(incoming_buff, read(len_40), len_40)
+			else
+				value["Message"] = nil
+			end
+			local len_41 = buffer.readu8(incoming_buff, read(1))
+			assert(len_41 >= 0, "value is less than 0!")
+			assert(len_41 <= 20, "value is more than 20!")
+			value["Outfits"] = table.create(len_41)
+			for i_17 = 1, len_41 do
+				local bool_17 = buffer.readu8(incoming_buff, read(1))
+				local val_20
+				val_20 = {  }
+				local len_42 = buffer.readu8(incoming_buff, read(1))
+				assert(len_42 >= 0, "value is less than 0!")
+				assert(len_42 <= 40, "value is more than 40!")
+				val_20["Name"] = buffer.readstring(incoming_buff, read(len_42), len_42)
+				val_20["Data"] = {  }
+				local len_43 = buffer.readu16(incoming_buff, read(2))
+				val_20["Data"]["Accessories"] = table.create(len_43)
+				for i_18 = 1, len_43 do
+					local bool_16 = buffer.readu8(incoming_buff, read(1))
+					local val_21
+					val_21 = {  }
+					val_21["AssetId"] = buffer.readf64(incoming_buff, read(8))
+					val_21["AccessoryType"] = {  }
+					local len_44 = buffer.readu16(incoming_buff, read(2))
+					val_21["AccessoryType"]["EnumType"] = buffer.readstring(incoming_buff, read(len_44), len_44)
+					val_21["AccessoryType"]["Value"] = buffer.readu16(incoming_buff, read(2))
+					if bit32.btest(bool_16, 0b0000000000000001) then
+						val_21["Order"] = buffer.readu16(incoming_buff, read(2))
+					else
+						val_21["Order"] = nil
+					end
+					if bit32.btest(bool_16, 0b0000000000000010) then
+						val_21["Puffiness"] = buffer.readf32(incoming_buff, read(4))
+					else
+						val_21["Puffiness"] = nil
+					end
+					if bit32.btest(bool_16, 0b0000000000000100) then
+						val_21["IsLayered"] = bit32.btest(bool_16, 0b0000000000001000)
+					else
+						val_21["IsLayered"] = nil
+					end
+					if bit32.btest(bool_16, 0b0000000000010000) then
+						val_21["Position"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_21["Position"] = nil
+					end
+					if bit32.btest(bool_16, 0b0000000000100000) then
+						val_21["Rotation"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_21["Rotation"] = nil
+					end
+					if bit32.btest(bool_16, 0b0000000001000000) then
+						val_21["Scale"] = Vector3.new(buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)), buffer.readf32(incoming_buff, read(4)))
+					else
+						val_21["Scale"] = nil
+					end
+					val_20["Data"]["Accessories"][i_18] = val_21
+				end
+				val_20["Data"]["Emotes"] = {  }
+				if not bit32.btest(bool_17, 0b0000000000000001) then
+					for _ = 1, buffer.readu16(incoming_buff, read(2)) + 1 do
+						local key_4
+						local val_22
+						local len_45 = buffer.readu16(incoming_buff, read(2))
+						key_4 = buffer.readstring(incoming_buff, read(len_45), len_45)
+						local len_46 = buffer.readu16(incoming_buff, read(2))
+						val_22 = table.create(len_46)
+						for i_19 = 1, len_46 do
+							local val_23
+							val_23 = buffer.readf64(incoming_buff, read(8))
+							val_22[i_19] = val_23
+						end
+						val_20["Data"]["Emotes"][key_4] = val_22
+					end
+				end
+				local len_47 = buffer.readu16(incoming_buff, read(2))
+				val_20["Data"]["EquippedEmotes"] = table.create(len_47)
+				for i_20 = 1, len_47 do
+					local val_24
+					val_24 = {  }
+					local len_48 = buffer.readu16(incoming_buff, read(2))
+					val_24["Name"] = buffer.readstring(incoming_buff, read(len_48), len_48)
+					val_24["Slot"] = buffer.readu16(incoming_buff, read(2))
+					val_20["Data"]["EquippedEmotes"][i_20] = val_24
+				end
+				val_20["Data"]["Face"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Scale"] = {  }
+				val_20["Data"]["Scale"]["BodyType"] = buffer.readf32(incoming_buff, read(4))
+				val_20["Data"]["Scale"]["Depth"] = buffer.readf32(incoming_buff, read(4))
+				val_20["Data"]["Scale"]["Head"] = buffer.readf32(incoming_buff, read(4))
+				val_20["Data"]["Scale"]["Height"] = buffer.readf32(incoming_buff, read(4))
+				val_20["Data"]["Scale"]["Proportion"] = buffer.readf32(incoming_buff, read(4))
+				val_20["Data"]["Scale"]["Width"] = buffer.readf32(incoming_buff, read(4))
+				val_20["Data"]["Animations"] = {  }
+				val_20["Data"]["Animations"]["Walk"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Run"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Fall"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Climb"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Swim"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Idle"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Mood"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Animations"]["Jump"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyParts"] = {  }
+				val_20["Data"]["BodyParts"]["Head"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyParts"]["Torso"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyParts"]["LeftArm"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyParts"]["RightArm"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyParts"]["LeftLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyParts"]["RightLeg"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["BodyPartColors"] = {  }
+				val_20["Data"]["BodyPartColors"]["Head"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_20["Data"]["BodyPartColors"]["Torso"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_20["Data"]["BodyPartColors"]["LeftArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_20["Data"]["BodyPartColors"]["RightArm"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_20["Data"]["BodyPartColors"]["LeftLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_20["Data"]["BodyPartColors"]["RightLeg"] = Color3.fromRGB(buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)), buffer.readu8(incoming_buff, read(1)))
+				val_20["Data"]["Clothing"] = {  }
+				val_20["Data"]["Clothing"]["Shirt"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Clothing"]["TShirt"] = buffer.readf64(incoming_buff, read(8))
+				val_20["Data"]["Clothing"]["Pants"] = buffer.readf64(incoming_buff, read(8))
+				value["Outfits"][i_17] = val_20
+			end
+			local thread = reliable_event_queue[5][call_id]
+			-- When using actors it's possible for multiple Zap clients to exist, but only one called the Zap remote function.
+			if thread then
+				task.spawn(thread, value)
+			end
+			reliable_event_queue[5][call_id] = nil
 		else
 			error("Unknown event id")
 		end
@@ -523,107 +1229,107 @@ local returns = {
 		}))
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 1)
-			local bool_7 = 0
-			local bool_7_pos_1 = alloc(1)
-			local len_13 = #Value["Accessories"]
+			local bool_19 = 0
+			local bool_19_pos_1 = alloc(1)
+			local len_49 = #Value["Accessories"]
 			alloc(2)
-			buffer.writeu16(outgoing_buff, outgoing_apos, len_13)
-			for i_5 = 1, len_13 do
-				local bool_6 = 0
-				local bool_6_pos_1 = alloc(1)
-				local val_5 = Value["Accessories"][i_5]
+			buffer.writeu16(outgoing_buff, outgoing_apos, len_49)
+			for i_21 = 1, len_49 do
+				local bool_18 = 0
+				local bool_18_pos_1 = alloc(1)
+				local val_25 = Value["Accessories"][i_21]
 				alloc(8)
-				buffer.writef64(outgoing_buff, outgoing_apos, val_5["AssetId"])
-				local len_14 = #val_5["AccessoryType"]["EnumType"]
+				buffer.writef64(outgoing_buff, outgoing_apos, val_25["AssetId"])
+				local len_50 = #val_25["AccessoryType"]["EnumType"]
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, len_14)
-				alloc(len_14)
-				buffer.writestring(outgoing_buff, outgoing_apos, val_5["AccessoryType"]["EnumType"], len_14)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_50)
+				alloc(len_50)
+				buffer.writestring(outgoing_buff, outgoing_apos, val_25["AccessoryType"]["EnumType"], len_50)
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, val_5["AccessoryType"]["Value"])
-				if val_5["Order"] ~= nil then
-					bool_6 = bit32.bor(bool_6, 0b0000000000000001)
+				buffer.writeu16(outgoing_buff, outgoing_apos, val_25["AccessoryType"]["Value"])
+				if val_25["Order"] ~= nil then
+					bool_18 = bit32.bor(bool_18, 0b0000000000000001)
 					alloc(2)
-					buffer.writeu16(outgoing_buff, outgoing_apos, val_5["Order"])
+					buffer.writeu16(outgoing_buff, outgoing_apos, val_25["Order"])
 				end
-				if val_5["Puffiness"] ~= nil then
-					bool_6 = bit32.bor(bool_6, 0b0000000000000010)
+				if val_25["Puffiness"] ~= nil then
+					bool_18 = bit32.bor(bool_18, 0b0000000000000010)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Puffiness"])
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Puffiness"])
 				end
-				if val_5["IsLayered"] ~= nil then
-					bool_6 = bit32.bor(bool_6, 0b0000000000000100)
-					if val_5["IsLayered"] then
-						bool_6 = bit32.bor(bool_6, 0b0000000000001000)
+				if val_25["IsLayered"] ~= nil then
+					bool_18 = bit32.bor(bool_18, 0b0000000000000100)
+					if val_25["IsLayered"] then
+						bool_18 = bit32.bor(bool_18, 0b0000000000001000)
 					end
 				end
-				if val_5["Position"] ~= nil then
-					bool_6 = bit32.bor(bool_6, 0b0000000000010000)
+				if val_25["Position"] ~= nil then
+					bool_18 = bit32.bor(bool_18, 0b0000000000010000)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Position"].X)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Position"].X)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Position"].Y)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Position"].Y)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Position"].Z)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Position"].Z)
 				end
-				if val_5["Rotation"] ~= nil then
-					bool_6 = bit32.bor(bool_6, 0b0000000000100000)
+				if val_25["Rotation"] ~= nil then
+					bool_18 = bit32.bor(bool_18, 0b0000000000100000)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Rotation"].X)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Rotation"].X)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Rotation"].Y)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Rotation"].Y)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Rotation"].Z)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Rotation"].Z)
 				end
-				if val_5["Scale"] ~= nil then
-					bool_6 = bit32.bor(bool_6, 0b0000000001000000)
+				if val_25["Scale"] ~= nil then
+					bool_18 = bit32.bor(bool_18, 0b0000000001000000)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Scale"].X)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Scale"].X)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Scale"].Y)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Scale"].Y)
 					alloc(4)
-					buffer.writef32(outgoing_buff, outgoing_apos, val_5["Scale"].Z)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_25["Scale"].Z)
 				end
-				buffer.writeu8(outgoing_buff, bool_6_pos_1, bool_6)
+				buffer.writeu8(outgoing_buff, bool_18_pos_1, bool_18)
 			end
 			local len_pos_1
-			local len_15 = 0
+			local len_51 = 0
 			for k_1, v_1 in Value["Emotes"] do
-				if len_15 == 0 then
+				if len_51 == 0 then
 					len_pos_1 = alloc(2)
 				end
-				len_15 = len_15 + 1
-				local len_16 = #k_1
+				len_51 = len_51 + 1
+				local len_52 = #k_1
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, len_16)
-				alloc(len_16)
-				buffer.writestring(outgoing_buff, outgoing_apos, k_1, len_16)
-				local len_17 = #v_1
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_52)
+				alloc(len_52)
+				buffer.writestring(outgoing_buff, outgoing_apos, k_1, len_52)
+				local len_53 = #v_1
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, len_17)
-				for i_6 = 1, len_17 do
-					local val_6 = v_1[i_6]
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_53)
+				for i_22 = 1, len_53 do
+					local val_26 = v_1[i_22]
 					alloc(8)
-					buffer.writef64(outgoing_buff, outgoing_apos, val_6)
+					buffer.writef64(outgoing_buff, outgoing_apos, val_26)
 				end
 			end
 			if len_pos_1 then
-				buffer.writeu16(outgoing_buff, len_pos_1, len_15 - 1)
+				buffer.writeu16(outgoing_buff, len_pos_1, len_51 - 1)
 			else
-				bool_7 = bit32.bor(bool_7, 0b0000000000000001)
+				bool_19 = bit32.bor(bool_19, 0b0000000000000001)
 			end
-			local len_18 = #Value["EquippedEmotes"]
+			local len_54 = #Value["EquippedEmotes"]
 			alloc(2)
-			buffer.writeu16(outgoing_buff, outgoing_apos, len_18)
-			for i_7 = 1, len_18 do
-				local val_7 = Value["EquippedEmotes"][i_7]
-				local len_19 = #val_7["Name"]
+			buffer.writeu16(outgoing_buff, outgoing_apos, len_54)
+			for i_23 = 1, len_54 do
+				local val_27 = Value["EquippedEmotes"][i_23]
+				local len_55 = #val_27["Name"]
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, len_19)
-				alloc(len_19)
-				buffer.writestring(outgoing_buff, outgoing_apos, val_7["Name"], len_19)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_55)
+				alloc(len_55)
+				buffer.writestring(outgoing_buff, outgoing_apos, val_27["Name"], len_55)
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, val_7["Slot"])
+				buffer.writeu16(outgoing_buff, outgoing_apos, val_27["Slot"])
 			end
 			alloc(8)
 			buffer.writef64(outgoing_buff, outgoing_apos, Value["Face"])
@@ -709,7 +1415,433 @@ local returns = {
 			buffer.writef64(outgoing_buff, outgoing_apos, Value["Clothing"]["TShirt"])
 			alloc(8)
 			buffer.writef64(outgoing_buff, outgoing_apos, Value["Clothing"]["Pants"])
-			buffer.writeu8(outgoing_buff, bool_7_pos_1, bool_7)
+			buffer.writeu8(outgoing_buff, bool_19_pos_1, bool_19)
+		end,
+	},
+	SaveOutfit = {
+		Call = function(Name: (string), Data: ({
+			["Accessories"]: ({ ({
+				["AssetId"]: (number),
+				["AccessoryType"]: ({
+					["EnumType"]: (string),
+					["Value"]: (number),
+				}),
+				["Order"]: ((number)?),
+				["Puffiness"]: ((number)?),
+				["IsLayered"]: ((boolean)?),
+				["Position"]: ((Vector3)?),
+				["Rotation"]: ((Vector3)?),
+				["Scale"]: ((Vector3)?),
+			}) }),
+			["Emotes"]: ({ [(string)]: ({ (number) }) }),
+			["EquippedEmotes"]: ({ ({
+				["Name"]: (string),
+				["Slot"]: (number),
+			}) }),
+			["Face"]: (number),
+			["Scale"]: ({
+				["BodyType"]: (number),
+				["Depth"]: (number),
+				["Head"]: (number),
+				["Height"]: (number),
+				["Proportion"]: (number),
+				["Width"]: (number),
+			}),
+			["Animations"]: ({
+				["Walk"]: (number),
+				["Run"]: (number),
+				["Fall"]: (number),
+				["Climb"]: (number),
+				["Swim"]: (number),
+				["Idle"]: (number),
+				["Mood"]: (number),
+				["Jump"]: (number),
+			}),
+			["BodyParts"]: ({
+				["Head"]: (number),
+				["Torso"]: (number),
+				["LeftArm"]: (number),
+				["RightArm"]: (number),
+				["LeftLeg"]: (number),
+				["RightLeg"]: (number),
+			}),
+			["BodyPartColors"]: ({
+				["Head"]: (Color3),
+				["Torso"]: (Color3),
+				["LeftArm"]: (Color3),
+				["RightArm"]: (Color3),
+				["LeftLeg"]: (Color3),
+				["RightLeg"]: (Color3),
+			}),
+			["Clothing"]: ({
+				["Shirt"]: (number),
+				["TShirt"]: (number),
+				["Pants"]: (number),
+			}),
+		})): (({
+			["Ok"]: (boolean),
+			["Message"]: ((string)?),
+			["Outfits"]: ({ ({
+				["Name"]: (string),
+				["Data"]: ({
+					["Accessories"]: ({ ({
+						["AssetId"]: (number),
+						["AccessoryType"]: ({
+							["EnumType"]: (string),
+							["Value"]: (number),
+						}),
+						["Order"]: ((number)?),
+						["Puffiness"]: ((number)?),
+						["IsLayered"]: ((boolean)?),
+						["Position"]: ((Vector3)?),
+						["Rotation"]: ((Vector3)?),
+						["Scale"]: ((Vector3)?),
+					}) }),
+					["Emotes"]: ({ [(string)]: ({ (number) }) }),
+					["EquippedEmotes"]: ({ ({
+						["Name"]: (string),
+						["Slot"]: (number),
+					}) }),
+					["Face"]: (number),
+					["Scale"]: ({
+						["BodyType"]: (number),
+						["Depth"]: (number),
+						["Head"]: (number),
+						["Height"]: (number),
+						["Proportion"]: (number),
+						["Width"]: (number),
+					}),
+					["Animations"]: ({
+						["Walk"]: (number),
+						["Run"]: (number),
+						["Fall"]: (number),
+						["Climb"]: (number),
+						["Swim"]: (number),
+						["Idle"]: (number),
+						["Mood"]: (number),
+						["Jump"]: (number),
+					}),
+					["BodyParts"]: ({
+						["Head"]: (number),
+						["Torso"]: (number),
+						["LeftArm"]: (number),
+						["RightArm"]: (number),
+						["LeftLeg"]: (number),
+						["RightLeg"]: (number),
+					}),
+					["BodyPartColors"]: ({
+						["Head"]: (Color3),
+						["Torso"]: (Color3),
+						["LeftArm"]: (Color3),
+						["RightArm"]: (Color3),
+						["LeftLeg"]: (Color3),
+						["RightLeg"]: (Color3),
+					}),
+					["Clothing"]: ({
+						["Shirt"]: (number),
+						["TShirt"]: (number),
+						["Pants"]: (number),
+					}),
+				}),
+			}) }),
+		}))
+			function_call_id += 1
+			function_call_id %= 256
+			if reliable_event_queue[3][function_call_id] then
+				function_call_id -= 1
+				error("Zap has more than 256 calls awaiting a response, and therefore this packet has been dropped")
+			end
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 6)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, function_call_id)
+			local bool_21 = 0
+			local bool_21_pos_1 = alloc(1)
+			local len_56 = #Name
+			assert(len_56 >= 0, "value is less than 0!")
+			assert(len_56 <= 40, "value is more than 40!")
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, len_56)
+			alloc(len_56)
+			buffer.writestring(outgoing_buff, outgoing_apos, Name, len_56)
+			local len_57 = #Data["Accessories"]
+			alloc(2)
+			buffer.writeu16(outgoing_buff, outgoing_apos, len_57)
+			for i_24 = 1, len_57 do
+				local bool_20 = 0
+				local bool_20_pos_1 = alloc(1)
+				local val_28 = Data["Accessories"][i_24]
+				alloc(8)
+				buffer.writef64(outgoing_buff, outgoing_apos, val_28["AssetId"])
+				local len_58 = #val_28["AccessoryType"]["EnumType"]
+				alloc(2)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_58)
+				alloc(len_58)
+				buffer.writestring(outgoing_buff, outgoing_apos, val_28["AccessoryType"]["EnumType"], len_58)
+				alloc(2)
+				buffer.writeu16(outgoing_buff, outgoing_apos, val_28["AccessoryType"]["Value"])
+				if val_28["Order"] ~= nil then
+					bool_20 = bit32.bor(bool_20, 0b0000000000000001)
+					alloc(2)
+					buffer.writeu16(outgoing_buff, outgoing_apos, val_28["Order"])
+				end
+				if val_28["Puffiness"] ~= nil then
+					bool_20 = bit32.bor(bool_20, 0b0000000000000010)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Puffiness"])
+				end
+				if val_28["IsLayered"] ~= nil then
+					bool_20 = bit32.bor(bool_20, 0b0000000000000100)
+					if val_28["IsLayered"] then
+						bool_20 = bit32.bor(bool_20, 0b0000000000001000)
+					end
+				end
+				if val_28["Position"] ~= nil then
+					bool_20 = bit32.bor(bool_20, 0b0000000000010000)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Position"].X)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Position"].Y)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Position"].Z)
+				end
+				if val_28["Rotation"] ~= nil then
+					bool_20 = bit32.bor(bool_20, 0b0000000000100000)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Rotation"].X)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Rotation"].Y)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Rotation"].Z)
+				end
+				if val_28["Scale"] ~= nil then
+					bool_20 = bit32.bor(bool_20, 0b0000000001000000)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Scale"].X)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Scale"].Y)
+					alloc(4)
+					buffer.writef32(outgoing_buff, outgoing_apos, val_28["Scale"].Z)
+				end
+				buffer.writeu8(outgoing_buff, bool_20_pos_1, bool_20)
+			end
+			local len_pos_2
+			local len_59 = 0
+			for k_2, v_2 in Data["Emotes"] do
+				if len_59 == 0 then
+					len_pos_2 = alloc(2)
+				end
+				len_59 = len_59 + 1
+				local len_60 = #k_2
+				alloc(2)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_60)
+				alloc(len_60)
+				buffer.writestring(outgoing_buff, outgoing_apos, k_2, len_60)
+				local len_61 = #v_2
+				alloc(2)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_61)
+				for i_25 = 1, len_61 do
+					local val_29 = v_2[i_25]
+					alloc(8)
+					buffer.writef64(outgoing_buff, outgoing_apos, val_29)
+				end
+			end
+			if len_pos_2 then
+				buffer.writeu16(outgoing_buff, len_pos_2, len_59 - 1)
+			else
+				bool_21 = bit32.bor(bool_21, 0b0000000000000001)
+			end
+			local len_62 = #Data["EquippedEmotes"]
+			alloc(2)
+			buffer.writeu16(outgoing_buff, outgoing_apos, len_62)
+			for i_26 = 1, len_62 do
+				local val_30 = Data["EquippedEmotes"][i_26]
+				local len_63 = #val_30["Name"]
+				alloc(2)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_63)
+				alloc(len_63)
+				buffer.writestring(outgoing_buff, outgoing_apos, val_30["Name"], len_63)
+				alloc(2)
+				buffer.writeu16(outgoing_buff, outgoing_apos, val_30["Slot"])
+			end
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Face"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, Data["Scale"]["BodyType"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, Data["Scale"]["Depth"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, Data["Scale"]["Head"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, Data["Scale"]["Height"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, Data["Scale"]["Proportion"])
+			alloc(4)
+			buffer.writef32(outgoing_buff, outgoing_apos, Data["Scale"]["Width"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Walk"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Run"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Fall"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Climb"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Swim"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Idle"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Mood"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Animations"]["Jump"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["BodyParts"]["Head"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["BodyParts"]["Torso"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["BodyParts"]["LeftArm"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["BodyParts"]["RightArm"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["BodyParts"]["LeftLeg"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["BodyParts"]["RightLeg"])
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["Head"].R * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["Head"].G * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["Head"].B * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["Torso"].R * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["Torso"].G * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["Torso"].B * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["LeftArm"].R * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["LeftArm"].G * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["LeftArm"].B * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["RightArm"].R * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["RightArm"].G * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["RightArm"].B * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["LeftLeg"].R * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["LeftLeg"].G * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["LeftLeg"].B * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["RightLeg"].R * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["RightLeg"].G * 255)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Data["BodyPartColors"]["RightLeg"].B * 255)
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Clothing"]["Shirt"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Clothing"]["TShirt"])
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, Data["Clothing"]["Pants"])
+			buffer.writeu8(outgoing_buff, bool_21_pos_1, bool_21)
+			reliable_event_queue[3][function_call_id] = coroutine.running()
+			return coroutine.yield()
+		end,
+	},
+	RenameOutfit = {
+		Call = function(Index: (number), Name: (string)): (({
+			["Ok"]: (boolean),
+			["Message"]: ((string)?),
+			["Outfits"]: ({ ({
+				["Name"]: (string),
+				["Data"]: ({
+					["Accessories"]: ({ ({
+						["AssetId"]: (number),
+						["AccessoryType"]: ({
+							["EnumType"]: (string),
+							["Value"]: (number),
+						}),
+						["Order"]: ((number)?),
+						["Puffiness"]: ((number)?),
+						["IsLayered"]: ((boolean)?),
+						["Position"]: ((Vector3)?),
+						["Rotation"]: ((Vector3)?),
+						["Scale"]: ((Vector3)?),
+					}) }),
+					["Emotes"]: ({ [(string)]: ({ (number) }) }),
+					["EquippedEmotes"]: ({ ({
+						["Name"]: (string),
+						["Slot"]: (number),
+					}) }),
+					["Face"]: (number),
+					["Scale"]: ({
+						["BodyType"]: (number),
+						["Depth"]: (number),
+						["Head"]: (number),
+						["Height"]: (number),
+						["Proportion"]: (number),
+						["Width"]: (number),
+					}),
+					["Animations"]: ({
+						["Walk"]: (number),
+						["Run"]: (number),
+						["Fall"]: (number),
+						["Climb"]: (number),
+						["Swim"]: (number),
+						["Idle"]: (number),
+						["Mood"]: (number),
+						["Jump"]: (number),
+					}),
+					["BodyParts"]: ({
+						["Head"]: (number),
+						["Torso"]: (number),
+						["LeftArm"]: (number),
+						["RightArm"]: (number),
+						["LeftLeg"]: (number),
+						["RightLeg"]: (number),
+					}),
+					["BodyPartColors"]: ({
+						["Head"]: (Color3),
+						["Torso"]: (Color3),
+						["LeftArm"]: (Color3),
+						["RightArm"]: (Color3),
+						["LeftLeg"]: (Color3),
+						["RightLeg"]: (Color3),
+					}),
+					["Clothing"]: ({
+						["Shirt"]: (number),
+						["TShirt"]: (number),
+						["Pants"]: (number),
+					}),
+				}),
+			}) }),
+		}))
+			function_call_id += 1
+			function_call_id %= 256
+			if reliable_event_queue[4][function_call_id] then
+				function_call_id -= 1
+				error("Zap has more than 256 calls awaiting a response, and therefore this packet has been dropped")
+			end
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 7)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, function_call_id)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Index)
+			local len_64 = #Name
+			assert(len_64 >= 0, "value is less than 0!")
+			assert(len_64 <= 40, "value is more than 40!")
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, len_64)
+			alloc(len_64)
+			buffer.writestring(outgoing_buff, outgoing_apos, Name, len_64)
+			reliable_event_queue[4][function_call_id] = coroutine.running()
+			return coroutine.yield()
 		end,
 	},
 	RecordPurchase = {
@@ -719,33 +1851,115 @@ local returns = {
 		}))
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 2)
-			local bool_8 = 0
-			local bool_8_pos_1 = alloc(1)
-			local len_20 = #Item["itemId"]
+			local bool_22 = 0
+			local bool_22_pos_1 = alloc(1)
+			local len_65 = #Item["itemId"]
 			alloc(2)
-			buffer.writeu16(outgoing_buff, outgoing_apos, len_20)
-			alloc(len_20)
-			buffer.writestring(outgoing_buff, outgoing_apos, Item["itemId"], len_20)
+			buffer.writeu16(outgoing_buff, outgoing_apos, len_65)
+			alloc(len_65)
+			buffer.writestring(outgoing_buff, outgoing_apos, Item["itemId"], len_65)
 			if Item["itemType"] == "Asset" then
-				bool_8 = bit32.bor(bool_8, 0b0000000000000001)
+				bool_22 = bit32.bor(bool_22, 0b0000000000000001)
 			elseif Item["itemType"] == "Bundle" then
 				local _
 			else
 				error("Invalid enumerator")
 			end
-			buffer.writeu8(outgoing_buff, bool_8_pos_1, bool_8)
+			buffer.writeu8(outgoing_buff, bool_22_pos_1, bool_22)
 		end,
 	},
 	RecordMenuToggle = {
 		Fire = function(Open: (boolean))
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 3)
-			local bool_9 = 0
-			local bool_9_pos_1 = alloc(1)
+			local bool_23 = 0
+			local bool_23_pos_1 = alloc(1)
 			if Open then
-				bool_9 = bit32.bor(bool_9, 0b0000000000000001)
+				bool_23 = bit32.bor(bool_23, 0b0000000000000001)
 			end
-			buffer.writeu8(outgoing_buff, bool_9_pos_1, bool_9)
+			buffer.writeu8(outgoing_buff, bool_23_pos_1, bool_23)
+		end,
+	},
+	GetOutfits = {
+		Call = function(): (({
+			["Ok"]: (boolean),
+			["Message"]: ((string)?),
+			["Outfits"]: ({ ({
+				["Name"]: (string),
+				["Data"]: ({
+					["Accessories"]: ({ ({
+						["AssetId"]: (number),
+						["AccessoryType"]: ({
+							["EnumType"]: (string),
+							["Value"]: (number),
+						}),
+						["Order"]: ((number)?),
+						["Puffiness"]: ((number)?),
+						["IsLayered"]: ((boolean)?),
+						["Position"]: ((Vector3)?),
+						["Rotation"]: ((Vector3)?),
+						["Scale"]: ((Vector3)?),
+					}) }),
+					["Emotes"]: ({ [(string)]: ({ (number) }) }),
+					["EquippedEmotes"]: ({ ({
+						["Name"]: (string),
+						["Slot"]: (number),
+					}) }),
+					["Face"]: (number),
+					["Scale"]: ({
+						["BodyType"]: (number),
+						["Depth"]: (number),
+						["Head"]: (number),
+						["Height"]: (number),
+						["Proportion"]: (number),
+						["Width"]: (number),
+					}),
+					["Animations"]: ({
+						["Walk"]: (number),
+						["Run"]: (number),
+						["Fall"]: (number),
+						["Climb"]: (number),
+						["Swim"]: (number),
+						["Idle"]: (number),
+						["Mood"]: (number),
+						["Jump"]: (number),
+					}),
+					["BodyParts"]: ({
+						["Head"]: (number),
+						["Torso"]: (number),
+						["LeftArm"]: (number),
+						["RightArm"]: (number),
+						["LeftLeg"]: (number),
+						["RightLeg"]: (number),
+					}),
+					["BodyPartColors"]: ({
+						["Head"]: (Color3),
+						["Torso"]: (Color3),
+						["LeftArm"]: (Color3),
+						["RightArm"]: (Color3),
+						["LeftLeg"]: (Color3),
+						["RightLeg"]: (Color3),
+					}),
+					["Clothing"]: ({
+						["Shirt"]: (number),
+						["TShirt"]: (number),
+						["Pants"]: (number),
+					}),
+				}),
+			}) }),
+		}))
+			function_call_id += 1
+			function_call_id %= 256
+			if reliable_event_queue[2][function_call_id] then
+				function_call_id -= 1
+				error("Zap has more than 256 calls awaiting a response, and therefore this packet has been dropped")
+			end
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 5)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, function_call_id)
+			reliable_event_queue[2][function_call_id] = coroutine.running()
+			return coroutine.yield()
 		end,
 	},
 	GetCloudConfig = {
@@ -789,6 +2003,90 @@ local returns = {
 			return coroutine.yield()
 		end,
 	},
+	DeleteOutfit = {
+		Call = function(Index: (number)): (({
+			["Ok"]: (boolean),
+			["Message"]: ((string)?),
+			["Outfits"]: ({ ({
+				["Name"]: (string),
+				["Data"]: ({
+					["Accessories"]: ({ ({
+						["AssetId"]: (number),
+						["AccessoryType"]: ({
+							["EnumType"]: (string),
+							["Value"]: (number),
+						}),
+						["Order"]: ((number)?),
+						["Puffiness"]: ((number)?),
+						["IsLayered"]: ((boolean)?),
+						["Position"]: ((Vector3)?),
+						["Rotation"]: ((Vector3)?),
+						["Scale"]: ((Vector3)?),
+					}) }),
+					["Emotes"]: ({ [(string)]: ({ (number) }) }),
+					["EquippedEmotes"]: ({ ({
+						["Name"]: (string),
+						["Slot"]: (number),
+					}) }),
+					["Face"]: (number),
+					["Scale"]: ({
+						["BodyType"]: (number),
+						["Depth"]: (number),
+						["Head"]: (number),
+						["Height"]: (number),
+						["Proportion"]: (number),
+						["Width"]: (number),
+					}),
+					["Animations"]: ({
+						["Walk"]: (number),
+						["Run"]: (number),
+						["Fall"]: (number),
+						["Climb"]: (number),
+						["Swim"]: (number),
+						["Idle"]: (number),
+						["Mood"]: (number),
+						["Jump"]: (number),
+					}),
+					["BodyParts"]: ({
+						["Head"]: (number),
+						["Torso"]: (number),
+						["LeftArm"]: (number),
+						["RightArm"]: (number),
+						["LeftLeg"]: (number),
+						["RightLeg"]: (number),
+					}),
+					["BodyPartColors"]: ({
+						["Head"]: (Color3),
+						["Torso"]: (Color3),
+						["LeftArm"]: (Color3),
+						["RightArm"]: (Color3),
+						["LeftLeg"]: (Color3),
+						["RightLeg"]: (Color3),
+					}),
+					["Clothing"]: ({
+						["Shirt"]: (number),
+						["TShirt"]: (number),
+						["Pants"]: (number),
+					}),
+				}),
+			}) }),
+		}))
+			function_call_id += 1
+			function_call_id %= 256
+			if reliable_event_queue[5][function_call_id] then
+				function_call_id -= 1
+				error("Zap has more than 256 calls awaiting a response, and therefore this packet has been dropped")
+			end
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 8)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, function_call_id)
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, Index)
+			reliable_event_queue[5][function_call_id] = coroutine.running()
+			return coroutine.yield()
+		end,
+	},
 	CloudConfigReset = {
 		SetCallback = function(Callback: () -> ()): () -> ()
 			reliable_events[0] = Callback
@@ -811,25 +2109,25 @@ local returns = {
 		}) }))
 			alloc(1)
 			buffer.writeu8(outgoing_buff, outgoing_apos, 0)
-			local len_21 = #Value
-			assert(len_21 >= 1, "value is less than 1!")
-			assert(len_21 <= 20, "value is more than 20!")
+			local len_66 = #Value
+			assert(len_66 >= 1, "value is less than 1!")
+			assert(len_66 <= 20, "value is more than 20!")
 			alloc(1)
-			buffer.writeu8(outgoing_buff, outgoing_apos, len_21 - 1)
-			for i_8 = 1, len_21 do
-				local val_8 = Value[i_8]
-				local len_22 = #val_8["Id"]
+			buffer.writeu8(outgoing_buff, outgoing_apos, len_66 - 1)
+			for i_27 = 1, len_66 do
+				local val_31 = Value[i_27]
+				local len_67 = #val_31["Id"]
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, len_22)
-				alloc(len_22)
-				buffer.writestring(outgoing_buff, outgoing_apos, val_8["Id"], len_22)
-				local len_23 = #val_8["Type"]["EnumType"]
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_67)
+				alloc(len_67)
+				buffer.writestring(outgoing_buff, outgoing_apos, val_31["Id"], len_67)
+				local len_68 = #val_31["Type"]["EnumType"]
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, len_23)
-				alloc(len_23)
-				buffer.writestring(outgoing_buff, outgoing_apos, val_8["Type"]["EnumType"], len_23)
+				buffer.writeu16(outgoing_buff, outgoing_apos, len_68)
+				alloc(len_68)
+				buffer.writestring(outgoing_buff, outgoing_apos, val_31["Type"]["EnumType"], len_68)
 				alloc(2)
-				buffer.writeu16(outgoing_buff, outgoing_apos, val_8["Type"]["Value"])
+				buffer.writeu16(outgoing_buff, outgoing_apos, val_31["Type"]["Value"])
 			end
 		end,
 	},

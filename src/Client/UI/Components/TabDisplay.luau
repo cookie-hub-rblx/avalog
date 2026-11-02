@@ -13,6 +13,7 @@ local BuildTab = require(script.Parent.BuildTab)
 local EquippedItemsTab = require(script.Parent.EquippedItemsTab)
 local InventoryItemsTab = require(script.Parent.InventoryItemsTab)
 local PrimaryItemsTab = require(script.Parent.PrimaryItemsTab)
+local OutfitsTab = require(script.Parent.OutfitsTab)
 
 local TAB_COMPONENTS = {
 	CatalogItemsTab = CatalogItemsTab,
@@ -21,6 +22,7 @@ local TAB_COMPONENTS = {
 	EquippedItemsTab = EquippedItemsTab,
 	InventoryItemsTab = InventoryItemsTab,
 	PrimaryItemsTab = PrimaryItemsTab,
+	OutfitsTab = OutfitsTab,
 }
 
 export type Props = { [string]: any } & {}
@@ -33,6 +35,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		EquippedItemsTab = EquippedItemsTab,
 		InventoryItemsTab = InventoryItemsTab,
 		PrimaryItemsTab = PrimaryItemsTab,
+		OutfitsTab = OutfitsTab,
 	})
 	local Theme = OnyxUI.Themer.Theme:now()
 	local Modes = Config:Get().EditModes
@@ -45,7 +48,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		local ActiveModeValue = Use(ActiveMode)
 		local CategoryValue = Use(States.Catalog.Category)
 
-		return Categories[ActiveModeValue][CategoryValue]
+		return (Categories[ActiveModeValue] or {})[CategoryValue]
 	end)
 	local ActiveTab = Scope:Computed(function(Use)
 		local ActiveModeValue = Use(ActiveMode)
@@ -57,6 +60,8 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 			return "PrimaryItemsTab"
 		elseif ActiveModeValue == "Inventory" then
 			return "InventoryItemsTab"
+		elseif ActiveModeValue == "Outfits" then
+			return "OutfitsTab"
 		elseif ActiveModeValue == "Customize" then
 			if CategoryValue and CategoryValue.Name then
 				if CategoryValue.Name == "Skin" then

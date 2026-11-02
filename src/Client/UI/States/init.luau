@@ -26,6 +26,14 @@ local States = {
 		EquippedBundleIds = Scope:Value({}),
 		Character = Scope:Value(nil),
 		Loaded = Scope:Value(false),
+		-- How many equipped items the player doesn't own (for the Buy button)
+		UnownedCount = Scope:Value(0),
+	},
+	Outfits = {
+		List = Scope:Value({}) :: Fusion.Value<{ { Name: string, Data: any } }>,
+		Loaded = Scope:Value(false),
+		Busy = Scope:Value(false),
+		Message = Scope:Value(nil) :: Fusion.Value<{ Text: string, Ok: boolean }?>,
 	},
 	Checkout = {
 		Loading = Scope:Value(false),

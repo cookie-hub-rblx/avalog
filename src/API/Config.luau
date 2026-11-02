@@ -6,7 +6,7 @@ export type Item = {
 	ItemType: Enum.AvatarItemType,
 }
 export type CoreGuiItem = "Chat" | "PlayerList" | "Backpack" | "Captures" | "Emotes" | "TouchControls"
-export type EditMode = "Marketplace" | "Inventory" | "Customize"
+export type EditMode = "Marketplace" | "Inventory" | "Customize" | "Outfits"
 export type Config = {
 	Theme: any?,
 	DataStoreEnabled: boolean?,
@@ -32,7 +32,7 @@ local CONFIG_TEMPLATE: Config = {
 		Accessories = 10,
 	},
 	HiddenCoreGui = { "PlayerList", "Captures", "Emotes", "TouchControls" },
-	EditModes = { "Marketplace", "Inventory", "Customize" },
+	EditModes = { "Marketplace", "Inventory", "Customize", "Outfits" },
 }
 
 --[=[

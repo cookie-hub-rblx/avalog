@@ -12,6 +12,8 @@ local Avatar = {
 	_Connections = {},
 }
 
+local UnownedToken = 0
+
 function Avatar:_LogHistoryEntry(NewData: HumanoidDescriber.Data)
 	local HistoryDataValue = Fusion.peek(States.Avatar.DataHistory)
 
@@ -84,6 +86,7 @@ function Avatar:_HandleAvatar()
 		States.Avatar.AssetIds:set({})
 		States.Avatar.EquippedAssetIds:set({})
 		States.Avatar.EquippedBundleIds:set({})
+		States.Avatar.UnownedCount:set(0)
 		return
 	end
 
@@ -99,7 +102,13 @@ function Avatar:_HandleAvatar()
 		self:_UpdateEquippedAssetIds()
 		self:_UpdateEquippedBundles()
 
-		AvatarManager:GetUnownedItems()
+		-- Ownership checks can yield; only the newest update may set the count
+		UnownedToken += 1
+		local Token = UnownedToken
+		local Unowned = AvatarManager:GetUnownedItems()
+		if Token == UnownedToken then
+			States.Avatar.UnownedCount:set(#Unowned)
+		end
 	end
 
 	States.Avatar.Character:set(AvatarManager.Character)

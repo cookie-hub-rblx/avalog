@@ -15,7 +15,7 @@ Navigation.Category = Scope:Computed(function(Use)
 	local ActiveModeValue = Use(Navigation.Mode)
 	local CategoryValue = Use(States.Catalog.Category)
 
-	return Categories[ActiveModeValue][CategoryValue]
+	return (Categories[ActiveModeValue] or {})[CategoryValue]
 end)
 Navigation.SubCategory = Scope:Computed(function(Use)
 	local CategoryValue = Use(Navigation.Category)

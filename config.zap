@@ -157,3 +157,38 @@ event RecordMenuToggle = {
 	call: SingleAsync,
 	data: (Open: boolean)
 }
+
+type Outfit = struct {
+	Name: string.binary(0..40),
+	Data: HumanoidDescriberData,
+}
+
+type OutfitsResult = struct {
+	Ok: boolean,
+	Message: string.binary(0..120)?,
+	Outfits: Outfit[0..20],
+}
+
+funct GetOutfits = {
+	call: Async,
+	args: (),
+	rets: OutfitsResult,
+}
+
+funct SaveOutfit = {
+	call: Async,
+	args: (Name: string.binary(0..40), Data: HumanoidDescriberData),
+	rets: OutfitsResult,
+}
+
+funct RenameOutfit = {
+	call: Async,
+	args: (Index: u8, Name: string.binary(0..40)),
+	rets: OutfitsResult,
+}
+
+funct DeleteOutfit = {
+	call: Async,
+	args: (Index: u8),
+	rets: OutfitsResult,
+}

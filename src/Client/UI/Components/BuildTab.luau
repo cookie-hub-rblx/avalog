@@ -37,7 +37,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 		end)
 	end
 
-	AvatarManager.Updated:Connect(function()
+	local function ReadScales()
 		if AvatarManager.HumanoidDescriber == nil then return end
 
 		local Data = AvatarManager.HumanoidDescriber:GetData()
@@ -49,6 +49,12 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 				ScaleProperty.Value:set(StretchNumber(ExistingScale, ScaleLimit.Min, ScaleLimit.Max))
 			end
 		end
+	end
+
+	-- Disconnected when the tab is closed, so reopening it doesn't stack listeners
+	local Connection = AvatarManager.Updated:Connect(ReadScales)
+	table.insert(Scope, function()
+		Connection:Disconnect()
 	end)
 
 	return Scope:Scroller(OnyxUI.Util.CombineProps(Props, {

@@ -5,4 +5,8 @@ return t.strictInterface({
 	Avatar = t.strictInterface({
 		Data = t.optional(t.buffer),
 	}),
+	Outfits = t.optional(t.array(t.strictInterface({
+		Name = t.string,
+		Data = t.buffer,
+	}))),
 })

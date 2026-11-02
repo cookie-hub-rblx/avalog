@@ -35,7 +35,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 				Options = Scope:Computed(function(Use)
 					local ModeValue = Use(Navigation.Mode)
 
-					local CategoryNames = CategoriesToNames(Categories[ModeValue])
+					local CategoryNames = CategoriesToNames(Categories[ModeValue] or {})
 
 					if (ModeValue == "Marketplace") and (CategoryNames[1] ~= "Featured") then
 						table.insert(CategoryNames, 1, "Featured")
@@ -48,13 +48,17 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 					return UDim.new(0, Use(Theme.Spacing["0.5"]))
 				end),
 				AutomaticSize = Enum.AutomaticSize.Y,
+				-- A single category (e.g. Outfits) needs no tab row
+				Visible = Scope:Computed(function(Use)
+					return #(Categories[Use(Navigation.Mode)] or {}) > 1
+				end),
 			},
 			Scope:Tabs {
 				Name = "SubCategories",
 				Options = Scope:Computed(function(Use)
 					local CategoryValue = Use(Navigation.Category)
 
-					return CategoriesToNames(CategoryValue.SubCategories or {})
+					return CategoriesToNames((CategoryValue and CategoryValue.SubCategories) or {})
 				end),
 				Selection = States.Catalog.SubCategory,
 				Padding = Scope:Computed(function(Use)
@@ -66,7 +70,7 @@ return function(Scope: Fusion.Scope<any>, Props: Props)
 				Visible = Scope:Computed(function(Use)
 					local CategoryValue = Use(Navigation.Category)
 
-					return #CategoriesToNames(CategoryValue.SubCategories or {}) > 0
+					return #CategoriesToNames((CategoryValue and CategoryValue.SubCategories) or {}) > 0
 				end),
 			},
 		},
